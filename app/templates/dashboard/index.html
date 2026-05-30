@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord - GESTBTP{% endblock %}
+{% block content %}
+<h1 class="page-title">Bonjour, {{ current_user.nom }} 👋</h1>
+<p class="page-subtitle">Vue d'ensemble de votre activité</p>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="label">Total Chantiers</div><div class="value">{{ stats.total }}</div></div>
+      <div class="icon"><i class="fas fa-hard-hat"></i></div>
+    </div>
+  </div>
+  <div class="stat-card success">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="label">Actifs</div><div class="value">{{ stats.actifs }}</div></div>
+      <div class="icon"><i class="fas fa-play"></i></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="label">Terminés</div><div class="value">{{ stats.termines }}</div></div>
+      <div class="icon"><i class="fas fa-check"></i></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="label">Rapports</div><div class="value">{{ stats.rapports }}</div></div>
+      <div class="icon"><i class="fas fa-clipboard"></i></div>
+    </div>
+  </div>
+  <div class="stat-card danger">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="label">Tâches en retard</div><div class="value">{{ stats.retard }}</div></div>
+      <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><h2>Derniers rapports</h2><a href="{{ url_for('journal.liste') }}" class="btn btn-outline btn-sm">Voir tout</a></div>
+      {% for r in derniers_rapports %}
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <strong>{{ r.chantier.nom }}</strong> — {{ r.date.strftime('%d/%m/%Y') }}<br>
+          <small style="color:var(--text-muted)">{{ (r.travaux_realises or '')[:80] }}</small>
+        </div>
+      {% else %}<p style="color:var(--text-muted)">Aucun rapport</p>{% endfor %}
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><h2>Tâches urgentes</h2><a href="{{ url_for('taches.liste') }}" class="btn btn-outline btn-sm">Voir tout</a></div>
+      {% for t in taches_urgentes %}
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <span class="badge badge-{{ t.priorite.value }}">{{ t.priorite.value }}</span>
+          <strong>{{ t.titre }}</strong>
+          {% if t.date_limite %}<small style="color:var(--text-muted)">— {{ t.date_limite.strftime('%d/%m/%Y') }}</small>{% endif %}
+        </div>
+      {% else %}<p style="color:var(--text-muted)">Aucune tâche</p>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

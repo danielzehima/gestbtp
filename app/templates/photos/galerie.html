@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="page-title">Photos — {{ chantier.nom }}</h1>
+{% if current_user.role.value in ['admin','conducteur'] %}
+<div class="card">
+  <form method="post" action="{{ url_for('photos.upload', chantier_id=chantier.id) }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="file" name="photos" multiple accept="image/*">
+    <input type="text" name="legende" placeholder="Légende">
+    <button class="btn btn-primary"><i class="fas fa-upload"></i> Uploader</button>
+  </form>
+</div>
+{% endif %}
+<div class="card">
+  <div class="gallery">
+    {% for p in photos %}
+      <div class="photo">
+        <img src="{{ url_for('static', filename=p.chemin_fichier) }}">
+        {% if current_user.role.value in ['admin','conducteur'] %}
+        <div class="actions">
+          <form method="post" action="{{ url_for('photos.supprimer', id=p.id) }}" data-confirm="Supprimer ?" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button><i class="fas fa-trash"></i></button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    {% else %}<p style="color:var(--text-muted)">Aucune photo</p>{% endfor %}
+  </div>
+</div>
+{% endblock %}

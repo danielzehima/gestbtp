@@ -1,0 +1,33 @@
+{% extends 'pages/_public_base.html' %}
+{% block title %}Support — GESTBTP{% endblock %}
+{% block content %}
+<div style="max-width:900px;margin:0 auto">
+  <div style="text-align:center;margin-bottom:50px">
+    <span class="section-tag">Support</span>
+    <h1 style="font-size:42px;font-weight:800;letter-spacing:-1px;margin:14px 0">Nous sommes là pour vous</h1>
+    <p style="color:var(--muted);font-size:17px">Plusieurs façons d'obtenir de l'aide rapidement.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+    <div class="feature-card" style="text-align:center">
+      <div class="ico" style="margin:0 auto 16px"><i class="fas fa-envelope"></i></div>
+      <h3>Email</h3>
+      <p>{{ CONTACT_EMAIL }}<br>Réponse sous 24h</p>
+    </div>
+    <div class="feature-card" style="text-align:center">
+      <div class="ico" style="margin:0 auto 16px"><i class="fab fa-whatsapp"></i></div>
+      <h3>WhatsApp</h3>
+      <p><a href="{{ SOCIAL.whatsapp }}" target="_blank" rel="noopener">Discuter maintenant</a></p>
+    </div>
+    <div class="feature-card" style="text-align:center">
+      <div class="ico" style="margin:0 auto 16px"><i class="fas fa-phone"></i></div>
+      <h3>Téléphone</h3>
+      <p>{{ CONTACT_PHONE }}<br>Lun-Ven 8h-18h</p>
+    </div>
+    <div class="feature-card" style="text-align:center">
+      <div class="ico" style="margin:0 auto 16px"><i class="fas fa-comments"></i></div>
+      <h3>Formulaire</h3>
+      <p><a href="{{ url_for('pages.contact') }}">Nous écrire</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

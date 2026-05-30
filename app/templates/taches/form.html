@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="page-title">{{ mode }} une tâche</h1>
+<div class="card">
+  <form method="post">
+    {{ form.hidden_tag() }}
+    <div class="form-row">
+      <div class="form-group">{{ form.chantier_id.label }} {{ form.chantier_id() }}</div>
+      <div class="form-group">{{ form.responsable_id.label }} {{ form.responsable_id() }}</div>
+    </div>
+    <div class="form-group">{{ form.titre.label }} {{ form.titre() }}</div>
+    <div class="form-group">{{ form.description.label }} {{ form.description() }}</div>
+    <div class="form-row">
+      <div class="form-group">{{ form.priorite.label }} {{ form.priorite() }}</div>
+      <div class="form-group">{{ form.statut.label }} {{ form.statut() }}</div>
+    </div>
+    <div class="form-group">{{ form.date_limite.label }} {{ form.date_limite() }}</div>
+    <a href="{{ url_for('taches.liste') }}" class="btn btn-outline">Annuler</a>
+    {{ form.submit(class="btn btn-primary") }}
+  </form>
+</div>
+{% endblock %}

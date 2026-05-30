@@ -1,0 +1,92 @@
+{% extends 'pages/_public_base.html' %}
+{% block title %}Contact — GESTBTP{% endblock %}
+{% block content %}
+<div style="max-width:900px;margin:0 auto">
+  <div style="text-align:center;margin-bottom:50px">
+    <span class="section-tag">Contact</span>
+    <h1 style="font-size:42px;font-weight:800;letter-spacing:-1px;margin:14px 0">Parlons de votre projet</h1>
+    <p style="color:var(--muted);font-size:17px">Une question ? Un besoin spécifique ? Notre équipe vous répond sous 24h.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:40px" class="contact-grid">
+    <aside style="background:var(--bg-soft);padding:32px;border-radius:14px;border:1px solid var(--border)">
+      <h3 style="margin-bottom:20px">Coordonnées</h3>
+      <p style="margin-bottom:16px"><i class="fas fa-envelope" style="color:var(--primary);width:24px"></i> {{ CONTACT_EMAIL }}</p>
+      <p style="margin-bottom:16px"><i class="fas fa-phone" style="color:var(--primary);width:24px"></i> {{ CONTACT_PHONE }}</p>
+      <p style="margin-bottom:24px"><i class="fas fa-map-marker-alt" style="color:var(--primary);width:24px"></i> {{ CONTACT_ADDR }}</p>
+      <div class="footer-social">
+        <a href="{{ SOCIAL.facebook }}" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="{{ SOCIAL.linkedin }}" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+        <a href="{{ SOCIAL.whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        <a href="{{ SOCIAL.twitter }}" target="_blank" rel="noopener" aria-label="X (Twitter)"><i class="fab fa-x-twitter"></i></a>
+      </div>
+    </aside>
+    <form id="contactForm" method="post" action="{{ url_for('pages.contact') }}" novalidate
+          style="background:#fff;padding:32px;border-radius:14px;border:1px solid var(--border)">
+      <div id="formAlert"></div>
+      <div class="form-group">
+        <label for="cf_nom">Nom complet *</label>
+        <input id="cf_nom" name="nom" type="text" required minlength="2" value="{{ form_data.nom or '' }}" aria-required="true">
+      </div>
+      <div class="form-group">
+        <label for="cf_email">Email *</label>
+        <input id="cf_email" name="email" type="email" required value="{{ form_data.email or '' }}" aria-required="true">
+      </div>
+      <div class="form-group">
+        <label for="cf_tel">Téléphone</label>
+        <input id="cf_tel" name="telephone" type="tel" value="{{ form_data.telephone or '' }}">
+      </div>
+      <div class="form-group">
+        <label for="cf_msg">Message *</label>
+        <textarea id="cf_msg" name="message" required minlength="10" rows="5" aria-required="true">{{ form_data.message or '' }}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center">
+        <i class="fas fa-paper-plane"></i> Envoyer le message
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('contactForm');
+const alertBox = document.getElementById('formAlert');
+
+function showAlert(type, msg){
+  alertBox.innerHTML = `<div class="flash-msg flash-${type}">${msg}</div>`;
+  alertBox.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(form));
+  // Validation côté client
+  const errs = [];
+  if(!data.nom || data.nom.trim().length < 2) errs.push("Nom requis (2 caractères min).");
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email||'')) errs.push("Email invalide.");
+  if(!data.message || data.message.trim().length < 10) errs.push("Message trop court (10 caractères min).");
+  if(errs.length){ showAlert('danger', errs.join('<br>')); return; }
+
+  const btn = form.querySelector('button[type=submit]');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+  try{
+    const r = await fetch(form.action, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify(data)
+    });
+    const j = await r.json();
+    if(r.ok && j.ok){
+      showAlert('success', j.message);
+      form.reset();
+    } else {
+      showAlert('danger', (j.errors||['Erreur']).join('<br>'));
+    }
+  }catch(_){ showAlert('danger', "Erreur réseau. Réessayez."); }
+  finally{ btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer le message'; }
+});
+</script>
+
+<style>
+@media(max-width:780px){.contact-grid{grid-template-columns:1fr !important}}
+</style>
+{% endblock %}

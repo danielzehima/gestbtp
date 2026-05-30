@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GESTBTP — Pilotez vos chantiers sans stress</title>
+<meta name="description" content="GESTBTP : la plateforme SaaS qui centralise rapports, tâches, photos et suivis de chantier pour conducteurs de travaux, entreprises BTP, architectes et bureaux de contrôle.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body class="landing">
+
+<a href="#hero" class="skip-link">Aller au contenu</a>
+
+<!-- =============== NAVBAR =============== -->
+<header class="nav" id="nav">
+  <div class="container nav-inner">
+    <a href="#hero" class="logo" aria-label="GESTBTP - Accueil">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="GESTBTP" class="logo-img">
+    </a>
+    <nav aria-label="Navigation principale"><ul class="nav-links">
+      <li><a href="#hero">Accueil</a></li>
+      <li><a href="#features">Fonctionnalités</a></li>
+      <li><a href="#pricing">Tarifs</a></li>
+      <li><a href="#testimonials">Témoignages</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul></nav>
+    <div class="nav-cta">
+      <a href="{{ url_for('auth.login') }}" class="btn btn-ghost" aria-label="Se connecter">Connexion</a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary" aria-label="Créer un compte gratuit">Essayer gratuitement</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Ouvrir le menu" aria-expanded="false"><i class="fas fa-bars"></i></button>
+    </div>
+  </div>
+</header>
+
+<!-- =============== HERO =============== -->
+<section class="hero" id="hero">
+  <div class="container hero-grid">
+    <div class="reveal">
+      <span class="hero-tag">🚀 Nouveau · Plateforme tout-en-un BTP</span>
+      <h1>Pilotez vos chantiers <span class="hl">sans stress</span></h1>
+      <p class="lead">Centralisez vos rapports, tâches, photos et suivis de chantier dans une seule plateforme intelligente. Pensée pour les conducteurs de travaux et les entreprises de construction modernes.</p>
+      <div class="hero-cta">
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg" aria-label="Commencer un essai gratuit">
+          <i class="fas fa-rocket"></i> Essai gratuit
+        </a>
+        <button class="btn btn-outline btn-lg" data-open-modal="demoModal" aria-label="Voir la démonstration vidéo">
+          <i class="fas fa-play"></i> Voir la démonstration
+        </button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><div class="num">+500</div><div class="lbl">Chantiers suivis</div></div>
+        <div class="stat"><div class="num">+50</div><div class="lbl">Entreprises</div></div>
+        <div class="stat"><div class="num">98%</div><div class="lbl">Satisfaction</div></div>
+      </div>
+    </div>
+
+    <div class="reveal" style="position:relative">
+      <div class="mockup" aria-hidden="true">
+        <div class="mockup-bar"><i></i><i></i><i></i></div>
+        <div class="mockup-body">
+          <div class="mockup-side">
+            <div class="item active"><i class="fas fa-th-large"></i></div>
+            <div class="item"><i class="fas fa-hard-hat"></i></div>
+            <div class="item"><i class="fas fa-clipboard"></i></div>
+            <div class="item"><i class="fas fa-check"></i></div>
+            <div class="item"><i class="fas fa-image"></i></div>
+          </div>
+          <div class="mockup-main">
+            <div class="mockup-cards">
+              <div class="mockup-card"><div class="v">24</div><div class="l">Chantiers</div></div>
+              <div class="mockup-card"><div class="v">12</div><div class="l">Actifs</div></div>
+              <div class="mockup-card"><div class="v">8</div><div class="l">Terminés</div></div>
+            </div>
+            <div class="mockup-row"><span>Villa Sud · C001</span><span class="pill pill-g">En cours</span></div>
+            <div class="mockup-row"><span>Immeuble Atlas</span><span class="pill pill-o">Préparation</span></div>
+            <div class="mockup-row"><span>Pont Nord</span><span class="pill pill-b">Terminé</span></div>
+            <div class="mockup-row"><span>Centre commercial</span><span class="pill pill-g">En cours</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="bubble b1"><div class="b-ico"><i class="fas fa-bolt"></i></div> Rapport généré en 30s</div>
+      <div class="bubble b2"><div class="b-ico"><i class="fas fa-check"></i></div> Tâche terminée</div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== PROBLEMS =============== -->
+<section class="problems">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="section-tag">Le problème</span>
+      <h2>La gestion de chantier est un casse-tête quotidien</h2>
+      <p>Trop d'outils, trop de papier, trop d'allers-retours. Les équipes terrain perdent un temps précieux.</p>
+    </div>
+    <div class="problems-grid">
+      <div class="problem-card reveal"><div class="ico"><i class="fas fa-file-circle-xmark"></i></div><h3>Rapports papier perdus</h3><p>Carnets oubliés, photos sur 3 téléphones, infos qui disparaissent.</p></div>
+      <div class="problem-card reveal"><div class="ico"><i class="fas fa-clock"></i></div><h3>Retards de chantier</h3><p>Pas d'alerte, pas de visibilité — les retards s'accumulent sans qu'on s'en rende compte.</p></div>
+      <div class="problem-card reveal"><div class="ico"><i class="fas fa-users-slash"></i></div><h3>Mauvais suivi des équipes</h3><p>Qui fait quoi ? Où en est-on ? La coordination devient une perte de temps.</p></div>
+      <div class="problem-card reveal"><div class="ico"><i class="fas fa-images"></i></div><h3>Photos dispersées</h3><p>WhatsApp, mails, téléphones perso… aucune trace fiable pour les litiges.</p></div>
+      <div class="problem-card reveal"><div class="ico"><i class="fas fa-file-pdf"></i></div><h3>PV difficiles à produire</h3><p>Mise en page Word, copier-coller, signatures… des heures à chaque réunion.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== FEATURES =============== -->
+<section id="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="section-tag">La solution</span>
+      <h2>Tout ce qu'il faut pour piloter un chantier moderne</h2>
+      <p>7 modules intégrés. Une seule plateforme. Zéro friction.</p>
+    </div>
+    <div class="features-grid">
+      {% set features = [
+        ('hard-hat','Gestion des chantiers','Créez, suivez et archivez tous vos chantiers depuis un tableau de bord central.',
+          'Centralisez l\'intégralité de vos chantiers : adresse, budget, dates, responsables, statuts (préparation, en cours, suspendu, terminé). Filtres avancés, recherche instantanée, export PDF, vue client séparée.'),
+        ('book','Journal de chantier','Rapports journaliers avec météo, travaux, main d\'œuvre et photos en un clic.',
+          'Un rapport en moins de 5 minutes : météo, travaux réalisés, difficultés, main d\'œuvre, observations, photos et documents joints. Historique consultable, recherche par date, export PDF instantané.'),
+        ('tasks','Gestion des tâches','Vue Kanban, priorités, affectations, alertes de retard automatiques.',
+          'Système Kanban (À faire / En cours / Terminé / Bloqué) avec 4 niveaux de priorité (Faible à Critique). Affectation à un responsable, dates limites, notifications automatiques en cas de retard.'),
+        ('file-signature','PV automatiques','Génération instantanée de procès-verbaux PDF avec logo et signature.',
+          'Génération de PV professionnels : en-tête avec votre logo, date, signature, photos intégrées. Vos clients reçoivent des documents prêts à archiver.'),
+        ('camera','Suivi photo','Galerie horodatée par chantier — preuve visuelle de l\'avancement.',
+          'Upload illimité de photos JPG/PNG, organisées par chantier. Galerie horodatée, légendes, suppression sécurisée. Une preuve visuelle indiscutable en cas de litige.'),
+        ('file-pdf','Rapports PDF','Exports professionnels pour vos clients, MOA et bureaux de contrôle.',
+          'Tous vos documents en un clic : fiche chantier, rapport journalier, liste des tâches. Mise en page premium aux couleurs de votre entreprise.'),
+        ('chart-line','Tableau de bord intelligent','KPI temps réel : avancement, retards, budget, productivité des équipes.',
+          'Indicateurs clés en temps réel : nombre de chantiers actifs, terminés, tâches en retard, derniers rapports. Visualisations claires pour décider vite.')
+      ] %}
+      {% for icon, title, desc, detail in features %}
+      <div class="feature-card reveal">
+        <div class="ico"><i class="fas fa-{{ icon }}"></i></div>
+        <h3>{{ title }}</h3>
+        <p>{{ desc }}</p>
+        <button class="link-more"
+                data-open-modal="featureModal"
+                data-title="{{ title }}"
+                data-icon="{{ icon }}"
+                data-detail="{{ detail }}"
+                aria-label="En savoir plus sur {{ title }}">
+          En savoir plus <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- =============== DEMO =============== -->
+<section class="demo" id="demo">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="section-tag" style="background:#1a1a1a;color:var(--primary)">Démonstration</span>
+      <h2>Une interface pensée pour le terrain</h2>
+      <p>Aussi simple sur smartphone que sur ordinateur. Vos équipes l'adoptent en moins d'une journée.</p>
+    </div>
+    <div class="demo-tabs" role="tablist">
+      <button class="demo-tab active" data-tab="dash" role="tab" aria-selected="true">Tableau de bord</button>
+      <button class="demo-tab" data-tab="chantiers" role="tab" aria-selected="false">Chantiers</button>
+      <button class="demo-tab" data-tab="rapport" role="tab" aria-selected="false">Rapport journalier</button>
+      <button class="demo-tab" data-tab="taches" role="tab" aria-selected="false">Tâches</button>
+    </div>
+    <div class="demo-screen reveal">
+      <div class="mockup-bar"><i></i><i></i><i></i></div>
+      <div class="demo-content" id="demoContent"></div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== WHY =============== -->
+<section>
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="section-tag">Pourquoi GESTBTP</span>
+      <h2>L'avantage concret pour votre entreprise</h2>
+      <p>Des bénéfices mesurables dès la première semaine d'utilisation.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card reveal"><div class="ico"><i class="fas fa-stopwatch"></i></div><h3>Gain de temps</h3><p>Jusqu'à 10h par semaine économisées sur la paperasse.</p></div>
+      <div class="why-card reveal"><div class="ico"><i class="fas fa-shield-alt"></i></div><h3>Moins d'erreurs</h3><p>Données centralisées, traçabilité totale, plus de pertes d'info.</p></div>
+      <div class="why-card reveal"><div class="ico"><i class="fas fa-handshake"></i></div><h3>Meilleure collaboration</h3><p>Tous les intervenants synchronisés sur la même plateforme.</p></div>
+      <div class="why-card reveal"><div class="ico"><i class="fas fa-tower-broadcast"></i></div><h3>Suivi temps réel</h3><p>Notifications instantanées, KPI en direct, décisions plus rapides.</p></div>
+      <div class="why-card reveal"><div class="ico"><i class="fas fa-mobile-screen"></i></div><h3>Accès mobile</h3><p>Sur le chantier, en réunion, en déplacement. 100% responsive.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== TESTIMONIALS SLIDER =============== -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="section-tag">Ils nous font confiance</span>
+      <h2>Ce que disent nos utilisateurs</h2>
+      <p>Des professionnels du BTP qui ont fait de GESTBTP leur outil quotidien.</p>
+    </div>
+
+    <div class="slider reveal" aria-roledescription="carousel" aria-label="Témoignages clients">
+      <div class="slider-track" id="sliderTrack">
+        <div class="slider-slide" role="group" aria-label="Témoignage 1 sur 3">
+          <div class="testi-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"Avant GESTBTP, je passais mes soirées à rédiger des rapports. Maintenant tout est saisi sur le terrain en 5 minutes. Un vrai changement de vie."</p>
+            <div class="testi-author">
+              <div class="testi-avatar a1">SK</div>
+              <div><div class="name">Sékou Koné</div><div class="role">Conducteur de travaux · BTP Concept</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="slider-slide" role="group" aria-label="Témoignage 2 sur 3">
+          <div class="testi-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"Notre équipe de 30 personnes utilise GESTBTP au quotidien. La visibilité sur tous nos projets est devenue incroyable. ROI atteint en 2 mois."</p>
+            <div class="testi-author">
+              <div class="testi-avatar a2">MD</div>
+              <div><div class="name">Marie Diallo</div><div class="role">Directrice de projet · Sogeprom</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="slider-slide" role="group" aria-label="Témoignage 3 sur 3">
+          <div class="testi-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"Les PV générés automatiquement m'ont sauvé. Mes clients reçoivent des documents pros, datés, photos incluses. Indispensable."</p>
+            <div class="testi-author">
+              <div class="testi-avatar a3">AT</div>
+              <div><div class="name">Amadou Traoré</div><div class="role">Architecte · Atelier AT</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="slider-btn prev" id="prevSlide" aria-label="Témoignage précédent"><i class="fas fa-chevron-left"></i></button>
+      <button class="slider-btn next" id="nextSlide" aria-label="Témoignage suivant"><i class="fas fa-chevron-right"></i></button>
+      <div class="slider-dots" id="sliderDots" role="tablist"></div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== PRICING =============== -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="section-tag">Tarifs</span>
+      <h2>Une tarification simple et transparente</h2>
+      <p>Commencez gratuitement. Évoluez quand vous voulez. Sans engagement.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <h3>Starter</h3>
+        <p class="desc">Pour démarrer avec un premier chantier.</p>
+        <div class="price-amount">5 000 <span>FCFA / mois</span></div>
+        <ul class="price-features">
+          <li><i class="fas fa-check"></i> Jusqu'à 3 chantiers</li>
+          <li><i class="fas fa-check"></i> 5 utilisateurs</li>
+          <li><i class="fas fa-check"></i> Rapports PDF</li>
+          <li><i class="fas fa-check"></i> Support email</li>
+        </ul>
+        <a href="{{ url_for('pages.register_alias', plan='starter') }}" class="btn btn-outline" style="width:100%;justify-content:center">Choisir Starter</a>
+      </div>
+      <div class="price-card featured reveal">
+        <span class="price-badge">⭐ Plus populaire</span>
+        <h3>Pro</h3>
+        <p class="desc">Pour les entreprises en croissance.</p>
+        <div class="price-amount">15 000 <span style="color:#FF9248">FCFA / mois</span></div>
+        <ul class="price-features">
+          <li><i class="fas fa-check"></i> Chantiers illimités</li>
+          <li><i class="fas fa-check"></i> 25 utilisateurs</li>
+          <li><i class="fas fa-check"></i> Tous les exports PDF</li>
+          <li><i class="fas fa-check"></i> Tableau de bord avancé</li>
+          <li><i class="fas fa-check"></i> Support prioritaire</li>
+          <li><i class="fas fa-check"></i> API d'intégration</li>
+        </ul>
+        <a href="{{ url_for('pages.register_alias', plan='pro') }}" class="btn btn-primary" style="width:100%;justify-content:center;background:#fff;color:var(--primary)">Choisir Pro</a>
+      </div>
+      <div class="price-card reveal">
+        <h3>Entreprise</h3>
+        <p class="desc">Pour les grands groupes BTP.</p>
+        <div class="price-amount">Sur devis</div>
+        <ul class="price-features">
+          <li><i class="fas fa-check"></i> Tout du plan Pro</li>
+          <li><i class="fas fa-check"></i> Utilisateurs illimités</li>
+          <li><i class="fas fa-check"></i> Hébergement dédié</li>
+          <li><i class="fas fa-check"></i> Personnalisation marque</li>
+          <li><i class="fas fa-check"></i> Account manager dédié</li>
+          <li><i class="fas fa-check"></i> SLA garanti</li>
+        </ul>
+        <a href="{{ url_for('pages.contact') }}" class="btn btn-dark" style="width:100%;justify-content:center">Demander un devis</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== CTA FINAL =============== -->
+<section class="cta-final" id="contact">
+  <div class="container">
+    <div class="reveal">
+      <h2>Prêt à moderniser la gestion de vos chantiers ?</h2>
+      <p>Rejoignez les centaines d'entreprises BTP qui ont déjà fait le pas.</p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+          <i class="fas fa-rocket"></i> Commencer gratuitement
+        </a>
+        <a href="{{ url_for('pages.contact') }}" class="btn btn-outline btn-lg">
+          <i class="fas fa-calendar"></i> Demander une démonstration
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== FOOTER =============== -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo" style="background:#fff;padding:14px;border-radius:14px;display:inline-flex">
+          <img src="{{ url_for('static', filename='img/logo.png') }}" alt="GESTBTP" style="height:100px;width:auto">
+        </div>
+        <p>La plateforme SaaS qui transforme la gestion de chantier pour les professionnels du BTP.</p>
+        <div class="footer-social">
+          <a href="{{ SOCIAL.facebook }}" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="{{ SOCIAL.linkedin }}" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="{{ SOCIAL.whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+          <a href="{{ SOCIAL.twitter }}" target="_blank" rel="noopener" aria-label="X (Twitter)"><i class="fab fa-x-twitter"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Produit</h4>
+        <ul>
+          <li><a href="#features">Fonctionnalités</a></li>
+          <li><a href="#pricing">Tarifs</a></li>
+          <li><a href="#demo">Démo</a></li>
+          <li><a href="{{ url_for('auth.register') }}">Essai gratuit</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Entreprise</h4>
+        <ul>
+          <li><a href="{{ url_for('pages.contact') }}">Contact</a></li>
+          <li><a href="#testimonials">Témoignages</a></li>
+          <li><a href="{{ url_for('pages.support') }}">Support</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Légal</h4>
+        <ul>
+          <li><a href="{{ url_for('pages.terms') }}">Conditions d'utilisation</a></li>
+          <li><a href="{{ url_for('pages.privacy') }}">Politique de confidentialité</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 GESTBTP. Tous droits réservés.</div>
+      <div style="display:flex;gap:24px">
+        <a href="{{ url_for('pages.terms') }}">Conditions</a>
+        <a href="{{ url_for('pages.privacy') }}">Confidentialité</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- =============== MODAL DEMO =============== -->
+<div class="modal" id="demoModal" role="dialog" aria-modal="true" aria-labelledby="demoModalTitle" hidden>
+  <div class="modal-overlay" data-close-modal></div>
+  <div class="modal-box">
+    <button class="modal-close" data-close-modal aria-label="Fermer"><i class="fas fa-times"></i></button>
+    <h3 id="demoModalTitle" style="margin-bottom:16px">Démonstration GESTBTP</h3>
+    <div class="video-wrap">
+      <iframe id="demoIframe" src="" title="Démo GESTBTP" frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen></iframe>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-top:12px">Découvrez en 2 minutes comment GESTBTP transforme votre quotidien.</p>
+  </div>
+</div>
+
+<!-- =============== MODAL FEATURE =============== -->
+<div class="modal" id="featureModal" role="dialog" aria-modal="true" aria-labelledby="featureTitle" hidden>
+  <div class="modal-overlay" data-close-modal></div>
+  <div class="modal-box">
+    <button class="modal-close" data-close-modal aria-label="Fermer"><i class="fas fa-times"></i></button>
+    <div class="ico" id="featureIcon" style="margin-bottom:16px"><i class="fas fa-star"></i></div>
+    <h3 id="featureTitle">Titre</h3>
+    <p id="featureDetail" style="color:#444;margin:14px 0 24px"></p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary"><i class="fas fa-rocket"></i> Essayer gratuitement</a>
+      <button class="btn btn-outline" data-close-modal>Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEMO_VIDEO = "{{ DEMO_VIDEO_URL }}";
+
+// ============ Smooth scroll (ancres) ============
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click', e=>{
+    const id = a.getAttribute('href');
+    if(id.length<2) return;
+    const el = document.querySelector(id);
+    if(!el) return;
+    e.preventDefault();
+    window.scrollTo({top: el.offsetTop - 80, behavior:'smooth'});
+    document.getElementById('mobileMenu')?.classList.remove('open');
+  });
+});
+
+// ============ Navbar scrolled ============
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',window.scrollY>20));
+
+// ============ Reveal on scroll ============
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// ============ Demo tabs ============
+const tabContents={
+  dash:`<h4>Vue d'ensemble en temps réel</h4>
+        <div class="demo-grid3"><div class="demo-stat"><div class="v">24</div><div class="l">Chantiers</div></div>
+        <div class="demo-stat"><div class="v">12</div><div class="l">Actifs</div></div>
+        <div class="demo-stat"><div class="v">5</div><div class="l">En retard</div></div></div>
+        <div class="demo-list"><div class="li"><span>📊 Avancement global</span><strong>72%</strong></div>
+        <div class="li"><span>👥 Équipes mobilisées</span><strong>48</strong></div>
+        <div class="li"><span>💰 Budget consommé</span><strong>1.2M FCFA</strong></div></div>`,
+  chantiers:`<h4>Tous vos chantiers en un coup d'œil</h4>
+        <div class="demo-list">
+        <div class="li"><span><strong>C001</strong> · Villa Sud · Dupont</span><span class="pill pill-g">En cours</span></div>
+        <div class="li"><span><strong>C002</strong> · Immeuble Atlas</span><span class="pill pill-o">Préparation</span></div>
+        <div class="li"><span><strong>C003</strong> · Pont Nord</span><span class="pill pill-b">Terminé</span></div>
+        <div class="li"><span><strong>C004</strong> · Centre commercial</span><span class="pill pill-g">En cours</span></div>
+        <div class="li"><span><strong>C005</strong> · École Plateau</span><span class="pill pill-g">En cours</span></div></div>`,
+  rapport:`<h4>Rapport journalier — 30/05/2026</h4>
+        <div class="demo-list"><div class="li"><span>☀ Météo</span><strong>Ensoleillé · 28°C</strong></div>
+        <div class="li"><span>👷 Main d'œuvre</span><strong>12 ouvriers</strong></div>
+        <div class="li"><span>🔨 Travaux</span><strong>Coffrage R+2 terminé</strong></div>
+        <div class="li"><span>⚠ Difficultés</span><strong>Livraison ciment retardée</strong></div>
+        <div class="li"><span>📷 Photos jointes</span><strong>6</strong></div></div>`,
+  taches:`<h4>Vue Kanban des tâches</h4>
+        <div class="demo-grid3">
+        <div class="demo-stat" style="background:#FEF3C7"><div class="v" style="color:#92400E">8</div><div class="l">À faire</div></div>
+        <div class="demo-stat" style="background:#DBEAFE"><div class="v" style="color:#1E40AF">5</div><div class="l">En cours</div></div>
+        <div class="demo-stat" style="background:#DCFCE7"><div class="v" style="color:#166534">12</div><div class="l">Terminé</div></div></div>
+        <div class="demo-list"><div class="li"><span>🔴 Critique · Coulage dalle béton</span><span class="pill" style="background:#FEE2E2;color:#991B1B">Aujourd'hui</span></div>
+        <div class="li"><span>🟠 Haute · Pose carrelage cuisine</span><span class="pill pill-o">Demain</span></div>
+        <div class="li"><span>🟡 Moyenne · Peinture façade</span><span class="pill pill-b">Vendredi</span></div></div>`
+};
+const demoContentEl = document.getElementById('demoContent');
+demoContentEl.style.transition='opacity .3s';
+demoContentEl.innerHTML = tabContents.dash;
+document.querySelectorAll('.demo-tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.demo-tab').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-selected','false')});
+    t.classList.add('active'); t.setAttribute('aria-selected','true');
+    demoContentEl.style.opacity=0;
+    setTimeout(()=>{demoContentEl.innerHTML=tabContents[t.dataset.tab];demoContentEl.style.opacity=1},150);
+  });
+});
+
+// ============ Modal système ============
+function openModal(id, opts={}){
+  const m = document.getElementById(id);
+  if(!m) return;
+  m.hidden = false;
+  document.body.style.overflow = 'hidden';
+  if(id === 'demoModal'){
+    document.getElementById('demoIframe').src = DEMO_VIDEO + '?autoplay=1&rel=0';
+  }
+  if(id === 'featureModal'){
+    document.getElementById('featureTitle').textContent = opts.title || '';
+    document.getElementById('featureDetail').textContent = opts.detail || '';
+    document.getElementById('featureIcon').innerHTML = `<i class="fas fa-${opts.icon||'star'}"></i>`;
+  }
+  // Focus management
+  m.querySelector('.modal-close')?.focus();
+}
+function closeModal(){
+  document.querySelectorAll('.modal:not([hidden])').forEach(m=>{
+    m.hidden = true;
+    if(m.id==='demoModal') document.getElementById('demoIframe').src='';
+  });
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('[data-open-modal]').forEach(b=>{
+  b.addEventListener('click', e=>{
+    openModal(b.dataset.openModal, {
+      title: b.dataset.title, detail: b.dataset.detail, icon: b.dataset.icon
+    });
+  });
+});
+document.addEventListener('click', e=>{
+  if(e.target.matches('[data-close-modal]') || e.target.closest('[data-close-modal]')) closeModal();
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+// ============ Slider témoignages ============
+const track = document.getElementById('sliderTrack');
+const slides = track.children;
+const dotsBox = document.getElementById('sliderDots');
+let current = 0;
+let autoTimer;
+
+for(let i=0;i<slides.length;i++){
+  const d = document.createElement('button');
+  d.className = 'slider-dot'+(i===0?' active':'');
+  d.setAttribute('aria-label', `Aller au témoignage ${i+1}`);
+  d.addEventListener('click', ()=>goTo(i, true));
+  dotsBox.appendChild(d);
+}
+function goTo(i, manual){
+  current = (i + slides.length) % slides.length;
+  track.style.transform = `translateX(-${current*100}%)`;
+  dotsBox.querySelectorAll('.slider-dot').forEach((d,idx)=>d.classList.toggle('active', idx===current));
+  if(manual) resetAuto();
+}
+function resetAuto(){
+  clearInterval(autoTimer);
+  autoTimer = setInterval(()=>goTo(current+1), 6000);
+}
+document.getElementById('prevSlide').addEventListener('click', ()=>goTo(current-1, true));
+document.getElementById('nextSlide').addEventListener('click', ()=>goTo(current+1, true));
+resetAuto();
+// Pause au survol
+document.querySelector('.slider').addEventListener('mouseenter', ()=>clearInterval(autoTimer));
+document.querySelector('.slider').addEventListener('mouseleave', resetAuto);
+// Clavier
+document.querySelector('.slider').addEventListener('keydown', e=>{
+  if(e.key==='ArrowLeft') goTo(current-1, true);
+  if(e.key==='ArrowRight') goTo(current+1, true);
+});
+
+// ============ Menu mobile ============
+const menuBtn = document.getElementById('menuBtn');
+const navLinks = document.querySelector('.nav-links');
+menuBtn?.addEventListener('click', ()=>{
+  const open = navLinks.classList.toggle('mobile-open');
+  menuBtn.setAttribute('aria-expanded', open);
+});
+</script>
+</body>
+</html>

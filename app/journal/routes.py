@@ -1,0 +1,93 @@
+import os
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, abort
+from flask_login import login_required, current_user
+from app.extensions import db
+from app.models.rapport import Rapport, RapportDocument
+from app.models.chantier import Chantier
+from app.models.photo import Photo
+from app.journal.forms import RapportForm
+from app.utils.helpers import save_upload, allowed_file
+from app.auth.decorators import role_required
+
+journal_bp = Blueprint('journal', __name__)
+
+
+@journal_bp.route('/')
+@login_required
+def liste():
+    date_filter = request.args.get('date')
+    query = Rapport.query
+    if date_filter:
+        query = query.filter_by(date=date_filter)
+    rapports = query.order_by(Rapport.date.desc()).all()
+    return render_template('journal/liste.html', rapports=rapports, date_filter=date_filter)
+
+
+@journal_bp.route('/nouveau', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'conducteur')
+def nouveau():
+    form = RapportForm()
+    form.chantier_id.choices = [(c.id, f"{c.reference} - {c.nom}") for c in Chantier.query.all()]
+    if form.validate_on_submit():
+        rapport = Rapport(
+            chantier_id=form.chantier_id.data,
+            auteur_id=current_user.id,
+            date=form.date.data,
+            meteo=form.meteo.data,
+            travaux_realises=form.travaux_realises.data,
+            difficultes=form.difficultes.data,
+            main_oeuvre=form.main_oeuvre.data,
+            observations=form.observations.data,
+        )
+        db.session.add(rapport)
+        db.session.flush()
+
+        # Photos
+        photo_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'chantiers')
+        for f in form.photos.data or []:
+            if f and f.filename and allowed_file(f.filename, current_app.config['ALLOWED_PHOTO_EXTENSIONS']):
+                fname, _ = save_upload(f, photo_folder)
+                photo = Photo(
+                    chantier_id=form.chantier_id.data,
+                    chemin_fichier=f"uploads/chantiers/{fname}",
+                    nom_fichier=f.filename,
+                    uploader_id=current_user.id,
+                )
+                db.session.add(photo)
+                db.session.flush()
+                rapport.photos.append(photo)
+
+        # Documents
+        doc_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'documents')
+        for f in form.documents.data or []:
+            if f and f.filename:
+                fname, _ = save_upload(f, doc_folder)
+                doc = RapportDocument(
+                    rapport_id=rapport.id, nom_fichier=f.filename,
+                    chemin=f"uploads/documents/{fname}",
+                )
+                db.session.add(doc)
+
+        db.session.commit()
+        flash("Rapport créé.", 'success')
+        return redirect(url_for('journal.detail', id=rapport.id))
+    return render_template('journal/form.html', form=form)
+
+
+@journal_bp.route('/<int:id>')
+@login_required
+def detail(id):
+    rapport = Rapport.query.get_or_404(id)
+    return render_template('journal/detail.html', rapport=rapport)
+
+
+@journal_bp.route('/<int:id>/supprimer', methods=['POST'])
+@login_required
+@role_required('admin', 'conducteur')
+def supprimer(id):
+    rapport = Rapport.query.get_or_404(id)
+    db.session.delete(rapport)
+    db.session.commit()
+    flash("Rapport supprimé.", 'info')
+    return redirect(url_for('journal.liste'))

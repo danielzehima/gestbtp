@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center">
+  <h1 class="page-title" style="margin:0">Rapport du {{ rapport.date.strftime('%d/%m/%Y') }}</h1>
+  <div>
+    <a href="{{ url_for('pdf.rapport', id=rapport.id) }}" class="btn btn-dark"><i class="fas fa-file-pdf"></i> Export PDF</a>
+    {% if current_user.role.value in ['admin','conducteur'] %}
+    <form method="post" action="{{ url_for('journal.supprimer', id=rapport.id) }}" data-confirm="Supprimer ?" style="display:inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger"><i class="fas fa-trash"></i></button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+<p class="page-subtitle">{{ rapport.chantier.nom }} — {{ rapport.meteo }}</p>
+
+<div class="card">
+  <h3>Travaux réalisés</h3><p>{{ rapport.travaux_realises or '—' }}</p>
+  <h3>Difficultés</h3><p>{{ rapport.difficultes or '—' }}</p>
+  <h3>Main d'œuvre</h3><p>{{ rapport.main_oeuvre or '—' }}</p>
+  <h3>Observations</h3><p>{{ rapport.observations or '—' }}</p>
+</div>
+
+{% if rapport.photos %}
+<div class="card">
+  <h3>Photos</h3>
+  <div class="gallery">
+    {% for p in rapport.photos %}
+    <div class="photo"><img src="{{ url_for('static', filename=p.chemin_fichier) }}"></div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if rapport.documents %}
+<div class="card">
+  <h3>Documents</h3>
+  {% for d in rapport.documents %}
+    <div><a href="{{ url_for('static', filename=d.chemin) }}" target="_blank"><i class="fas fa-file"></i> {{ d.nom_fichier }}</a></div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

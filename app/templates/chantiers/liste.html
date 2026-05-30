@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Chantiers - GESTBTP{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+  <h1 class="page-title" style="margin:0">Chantiers</h1>
+  {% if current_user.role.value in ['admin','conducteur'] %}
+    <a href="{{ url_for('chantiers.nouveau') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Nouveau chantier</a>
+  {% endif %}
+</div>
+
+<form method="get" class="card" style="display:flex;gap:12px;align-items:center">
+  <input name="q" value="{{ q }}" placeholder="Rechercher nom ou référence..." style="flex:1">
+  <select name="statut">
+    <option value="">— Tous statuts —</option>
+    <option value="preparation" {% if statut=='preparation' %}selected{% endif %}>Préparation</option>
+    <option value="en_cours" {% if statut=='en_cours' %}selected{% endif %}>En cours</option>
+    <option value="suspendu" {% if statut=='suspendu' %}selected{% endif %}>Suspendu</option>
+    <option value="termine" {% if statut=='termine' %}selected{% endif %}>Terminé</option>
+  </select>
+  <button class="btn btn-dark">Filtrer</button>
+</form>
+
+<table class="data">
+  <thead><tr><th>Réf.</th><th>Nom</th><th>Client</th><th>Statut</th><th>Date début</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for c in chantiers %}
+    <tr>
+      <td><strong>{{ c.reference }}</strong></td>
+      <td>{{ c.nom }}</td>
+      <td>{{ c.client.nom if c.client else '—' }}</td>
+      <td><span class="badge badge-{{ c.statut.value }}">{{ c.statut.value }}</span></td>
+      <td>{{ c.date_debut.strftime('%d/%m/%Y') if c.date_debut else '—' }}</td>
+      <td>
+        <a href="{{ url_for('chantiers.detail', id=c.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
+        {% if current_user.role.value in ['admin','conducteur'] %}
+        <a href="{{ url_for('chantiers.modifier', id=c.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i></a>
+        {% endif %}
+        {% if current_user.is_admin %}
+        <form method="post" action="{{ url_for('chantiers.supprimer', id=c.id) }}"
+              data-confirm="Supprimer ce chantier ?" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px">Aucun chantier</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'pages/_public_base.html' %}
+{% block title %}{{ titre }} — GESTBTP{% endblock %}
+{% block content %}
+<div style="max-width:780px;margin:0 auto;background:#fff;padding:48px;border-radius:14px;border:1px solid var(--border)">
+  <h1 style="font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:24px">{{ titre }}</h1>
+  <div style="color:#444;line-height:1.7">{{ contenu|safe }}</div>
+  <p style="color:var(--muted);font-size:13px;margin-top:40px">Dernière mise à jour : 30/05/2026</p>
+</div>
+{% endblock %}

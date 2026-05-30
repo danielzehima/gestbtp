@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="page-title">{{ mode }} un chantier</h1>
+<div class="card">
+  <form method="post">
+    {{ form.hidden_tag() }}
+    <div class="form-row">
+      <div class="form-group">{{ form.nom.label }} {{ form.nom() }}</div>
+      <div class="form-group">{{ form.reference.label }} {{ form.reference() }}</div>
+    </div>
+    <div class="form-group">{{ form.adresse.label }} {{ form.adresse() }}</div>
+    <div class="form-row">
+      <div class="form-group">{{ form.client_id.label }} {{ form.client_id() }}</div>
+      <div class="form-group">{{ form.responsable_id.label }} {{ form.responsable_id() }}</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">{{ form.budget.label }} {{ form.budget() }}</div>
+      <div class="form-group">{{ form.statut.label }} {{ form.statut() }}</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">{{ form.date_debut.label }} {{ form.date_debut() }}</div>
+      <div class="form-group">{{ form.date_fin_prev.label }} {{ form.date_fin_prev() }}</div>
+    </div>
+    <div class="form-group">{{ form.description.label }} {{ form.description() }}</div>
+    <a href="{{ url_for('chantiers.liste') }}" class="btn btn-outline">Annuler</a>
+    {{ form.submit(class="btn btn-primary") }}
+  </form>
+</div>
+{% endblock %}

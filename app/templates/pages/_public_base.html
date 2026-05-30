@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}GESTBTP{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body class="landing">
+
+<header class="nav scrolled" id="nav">
+  <div class="container nav-inner">
+    <a href="{{ url_for('dashboard.root') }}" class="logo" aria-label="Retour accueil GESTBTP">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="GESTBTP" class="logo-img">
+    </a>
+    <nav><ul class="nav-links">
+      <li><a href="{{ url_for('dashboard.root') }}#hero">Accueil</a></li>
+      <li><a href="{{ url_for('dashboard.root') }}#features">Fonctionnalités</a></li>
+      <li><a href="{{ url_for('dashboard.root') }}#pricing">Tarifs</a></li>
+      <li><a href="{{ url_for('pages.contact') }}">Contact</a></li>
+    </ul></nav>
+    <div class="nav-cta">
+      <a href="{{ url_for('auth.login') }}" class="btn btn-ghost">Connexion</a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Essayer gratuitement</a>
+    </div>
+  </div>
+</header>
+
+<main style="padding:140px 0 80px;min-height:60vh">
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash-msg flash-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-bottom" style="border:none;justify-content:center;gap:30px">
+      <a href="{{ url_for('dashboard.root') }}">Accueil</a>
+      <a href="{{ url_for('pages.contact') }}">Contact</a>
+      <a href="{{ url_for('pages.privacy') }}">Confidentialité</a>
+      <a href="{{ url_for('pages.terms') }}">Conditions</a>
+      <a href="{{ url_for('pages.support') }}">Support</a>
+      <span>© 2026 GESTBTP</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

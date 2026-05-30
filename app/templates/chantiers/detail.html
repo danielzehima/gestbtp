@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+  <h1 class="page-title" style="margin:0">{{ chantier.nom }}</h1>
+  <div>
+    {% if current_user.role.value in ['admin','conducteur'] %}
+      <a href="{{ url_for('chantiers.modifier', id=chantier.id) }}" class="btn btn-outline"><i class="fas fa-edit"></i> Modifier</a>
+    {% endif %}
+    <a href="{{ url_for('pdf.chantier', id=chantier.id) }}" class="btn btn-dark"><i class="fas fa-file-pdf"></i> PDF</a>
+  </div>
+</div>
+<p class="page-subtitle">{{ chantier.reference }} — <span class="badge badge-{{ chantier.statut.value }}">{{ chantier.statut.value }}</span></p>
+
+<div class="tabs">
+  <a href="#" class="active" onclick="showTab('infos',event)">Infos</a>
+  <a href="#" onclick="showTab('journal',event)">Journal ({{ chantier.rapports.count() }})</a>
+  <a href="#" onclick="showTab('taches',event)">Tâches ({{ chantier.taches.count() }})</a>
+  <a href="#" onclick="showTab('photos',event)">Photos ({{ chantier.photos.count() }})</a>
+</div>
+
+<div id="tab-infos" class="tab-pane">
+  <div class="card">
+    <div class="form-row">
+      <div><strong>Client :</strong> {{ chantier.client.nom if chantier.client else '—' }}</div>
+      <div><strong>Responsable :</strong> {{ chantier.responsable.nom if chantier.responsable else '—' }}</div>
+    </div>
+    <div class="form-row" style="margin-top:12px">
+      <div><strong>Adresse :</strong> {{ chantier.adresse or '—' }}</div>
+      <div><strong>Budget :</strong> {{ chantier.budget }} €</div>
+    </div>
+    <div class="form-row" style="margin-top:12px">
+      <div><strong>Date début :</strong> {{ chantier.date_debut.strftime('%d/%m/%Y') if chantier.date_debut else '—' }}</div>
+      <div><strong>Date fin prév. :</strong> {{ chantier.date_fin_prev.strftime('%d/%m/%Y') if chantier.date_fin_prev else '—' }}</div>
+    </div>
+    <hr>
+    <strong>Description</strong>
+    <p>{{ chantier.description or '—' }}</p>
+  </div>
+</div>
+
+<div id="tab-journal" class="tab-pane" style="display:none">
+  <div class="card">
+    {% for r in chantier.rapports %}
+      <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+        <a href="{{ url_for('journal.detail', id=r.id) }}"><strong>{{ r.date.strftime('%d/%m/%Y') }}</strong></a>
+        — {{ r.meteo }} — {{ (r.travaux_realises or '')[:120] }}
+      </div>
+    {% else %}<p style="color:var(--text-muted)">Aucun rapport</p>{% endfor %}
+  </div>
+</div>
+
+<div id="tab-taches" class="tab-pane" style="display:none">
+  <div class="card">
+    <a href="{{ url_for('pdf.taches', id=chantier.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-file-pdf"></i> PDF des tâches</a>
+    {% for t in chantier.taches %}
+      <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+        <span class="badge badge-{{ t.statut.value }}">{{ t.statut.value }}</span>
+        <span class="badge badge-{{ t.priorite.value }}">{{ t.priorite.value }}</span>
+        <strong>{{ t.titre }}</strong>
+        {% if t.date_limite %} — {{ t.date_limite.strftime('%d/%m/%Y') }}{% endif %}
+      </div>
+    {% else %}<p style="color:var(--text-muted)">Aucune tâche</p>{% endfor %}
+  </div>
+</div>
+
+<div id="tab-photos" class="tab-pane" style="display:none">
+  <div class="card">
+    {% if current_user.role.value in ['admin','conducteur'] %}
+    <form method="post" action="{{ url_for('photos.upload', chantier_id=chantier.id) }}" enctype="multipart/form-data" style="margin-bottom:16px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="file" name="photos" multiple accept="image/*">
+      <input type="text" name="legende" placeholder="Légende (optionnel)">
+      <button class="btn btn-primary btn-sm"><i class="fas fa-upload"></i> Uploader</button>
+    </form>
+    {% endif %}
+    <div class="gallery">
+      {% for p in chantier.photos %}
+        <div class="photo">
+          <img src="{{ url_for('static', filename=p.chemin_fichier) }}" alt="">
+          {% if current_user.role.value in ['admin','conducteur'] %}
+          <div class="actions">
+            <form method="post" action="{{ url_for('photos.supprimer', id=p.id) }}" data-confirm="Supprimer ?" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button title="Supprimer"><i class="fas fa-trash"></i></button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+      {% else %}<p style="color:var(--text-muted)">Aucune photo</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(name, e) {
+  e.preventDefault();
+  document.querySelectorAll('.tab-pane').forEach(p => p.style.display='none');
+  document.getElementById('tab-'+name).style.display='block';
+  document.querySelectorAll('.tabs a').forEach(a => a.classList.remove('active'));
+  e.target.classList.add('active');
+}
+</script>
+{% endblock %}
