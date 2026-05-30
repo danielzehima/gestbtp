@@ -16,3 +16,6 @@ app/static/uploads/documents/*
 .idea/
 *.log
 migrations/versions/__pycache__/
+
+.vercel
+.env*.local

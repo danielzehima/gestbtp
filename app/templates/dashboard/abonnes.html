@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Gestion des Abonnés - GESTBTP{% endblock %}
+{% block content %}
+<h1 class="page-title">Gestion des Abonnés SaaS</h1>
+<p class="page-subtitle">Suivi des revenus et statuts des clients</p>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="label">Revenu Total</div><div class="value">{{ "{:,.0f}".format(stats.revenu).replace(',', ' ') }} FCFA</div></div>
+      <div class="icon"><i class="fas fa-wallet"></i></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="label">Plan Starter</div><div class="value">{{ stats.starter }}</div></div>
+      <div class="icon"><i class="fas fa-seedling"></i></div>
+    </div>
+  </div>
+  <div class="stat-card success">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="label">Plan Pro</div><div class="value">{{ stats.pro }}</div></div>
+      <div class="icon"><i class="fas fa-rocket"></i></div>
+    </div>
+  </div>
+  <div class="stat-card danger">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="label">Plan Entreprise</div><div class="value">{{ stats.entreprise }}</div></div>
+      <div class="icon"><i class="fas fa-building"></i></div>
+    </div>
+  </div>
+</div>
+
+<form method="get" class="card" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+  <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par nom ou email..." class="form-control" style="flex:2; min-width: 200px;">
+  
+  <select name="plan" class="form-control" style="flex:1; min-width: 150px;">
+    <option value="">— Tous les forfaits —</option>
+    <option value="starter" {% if plan_filter == 'starter' %}selected{% endif %}>Starter</option>
+    <option value="pro" {% if plan_filter == 'pro' %}selected{% endif %}>Pro</option>
+    <option value="entreprise" {% if plan_filter == 'entreprise' %}selected{% endif %}>Entreprise</option>
+  </select>
+
+  <select name="statut" class="form-control" style="flex:1; min-width: 150px;">
+    <option value="">— Tous les statuts —</option>
+    <option value="actif" {% if statut_filter == 'actif' %}selected{% endif %}>Actifs</option>
+    <option value="suspendu" {% if statut_filter == 'suspendu' %}selected{% endif %}>Suspendus</option>
+    <option value="annule" {% if statut_filter == 'annule' %}selected{% endif %}>Annulés</option>
+  </select>
+
+  <button type="submit" class="btn btn-dark">Filtrer</button>
+  <a href="{{ url_for('dashboard.abonnes') }}" class="btn btn-outline">Reset</a>
+</form>
+
+<table class="data">
+  <thead>
+    <tr>
+      <th>Client</th>
+      <th>Contact</th>
+      <th>Forfait</th>
+      <th>Souscription</th>
+      <th>Statut</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for client in clients %}
+    <tr>
+      <td><strong>{{ client.nom }}</strong></td>
+      <td>{{ client.email }}<br><small style="color:var(--text-muted)">{{ client.telephone or '' }}</small></td>
+      <td><span class="badge badge-dark" style="background:#111;color:#fff">{{ client.plan.value|capitalize }}</span></td>
+      <td>{{ client.date_souscription.strftime('%d/%m/%Y') if client.date_souscription else '—' }}</td>
+      <td>
+        {% if client.statut_abo.value == 'actif' %}
+          <span class="badge badge-success" style="background:#16A34A;color:#fff">Actif</span>
+        {% elif client.statut_abo.value == 'suspendu' %}
+          <span class="badge badge-warning" style="background:#F59E0B;color:#fff">Suspendu</span>
+        {% else %}
+          <span class="badge badge-danger" style="background:#DC2626;color:#fff">Annulé</span>
+        {% endif %}
+      </td>
+      <td>
+        <form method="post" action="{{ url_for('dashboard.toggle_status', id=client.id) }}" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% if client.statut_abo.value == 'actif' %}
+            <button type="submit" class="btn btn-danger btn-sm" data-confirm="Suspendre cet abonnement ?">
+              <i class="fas fa-pause-circle"></i> Suspendre
+            </button>
+          {% else %}
+            <button type="submit" class="btn btn-primary btn-sm" data-confirm="Réactiver cet abonnement ?">
+              <i class="fas fa-play-circle"></i> Activer
+            </button>
+          {% endif %}
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">Aucun client trouvé.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
