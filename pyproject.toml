@@ -1,7 +1,31 @@
-# Ce fichier sert UNIQUEMENT à déclarer le point d'entrée WSGI pour Vercel.
-# Les dépendances sont gérées par requirements.txt (à la racine, à côté de run.py).
-# On ne met PAS de section [project] ici pour éviter que Vercel tente
-# d'installer le dossier comme un package Python (ce qui ignorait requirements.txt).
+[project]
+name = "gestbtp"
+version = "1.0.0"
+description = "SaaS de gestion de chantier BTP"
+requires-python = ">=3.10"
+dependencies = [
+    "Flask==3.0.3",
+    "Flask-SQLAlchemy==3.1.1",
+    "Flask-Migrate==4.0.7",
+    "Flask-JWT-Extended==4.6.0",
+    "Flask-WTF==1.2.1",
+    "Flask-Login==0.6.3",
+    "Flask-Mail==0.10.0",
+    "Flask-CORS==4.0.1",
+    "WTForms==3.1.2",
+    "email-validator==2.2.0",
+    "psycopg2-binary==2.9.9",
+    "python-dotenv==1.0.1",
+    "reportlab==4.2.2",
+    "Pillow==10.4.0",
+    "Werkzeug==3.0.4",
+    "bcrypt==4.2.0",
+]
+
+# Empêche uv de tenter de "construire" le dossier comme un package Python :
+# on veut juste qu'il installe les dépendances ci-dessus.
+[tool.uv]
+package = false
 
 [tool.vercel]
 entrypoint = "run:app"
