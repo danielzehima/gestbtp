@@ -17,10 +17,19 @@ def create_app(config_name='development'):
     csrf.init_app(app)
     cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
 
-    # Création dossiers upload
+    # Création dossiers upload.
+    # Sur un hébergement serverless (Vercel), le système de fichiers du projet
+    # est en LECTURE SEULE -> on bascule les uploads vers /tmp (seul dossier
+    # inscriptible) et on protège la création contre une erreur fatale au boot.
+    if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+        app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
     for sub in ('chantiers', 'documents'):
         path = os.path.join(app.config['UPLOAD_FOLDER'], sub)
-        os.makedirs(path, exist_ok=True)
+        try:
+            os.makedirs(path, exist_ok=True)
+        except OSError:
+            # Filesystem en lecture seule : on ignore, l'app doit quand même démarrer
+            pass
 
     # Import des modèles (pour Alembic / create_all)
     from app.models import user, chantier, rapport, tache, photo, notification  # noqa
