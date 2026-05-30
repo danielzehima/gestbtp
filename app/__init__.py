@@ -5,8 +5,14 @@ from app.extensions import db, migrate, jwt, login_manager, mail, csrf, cors
 
 
 def create_app(config_name='development'):
+    # Robustesse : on normalise la valeur (FLASK_ENV peut arriver en
+    # majuscules depuis Vercel, ex 'PRODUCTION') et on retombe sur
+    # 'production' si la clé est inconnue, pour ne jamais planter au boot.
+    key = (config_name or 'development').strip().lower()
+    if key not in config_by_name:
+        key = 'production'
     app = Flask(__name__, instance_relative_config=False)
-    app.config.from_object(config_by_name[config_name])
+    app.config.from_object(config_by_name[key])
 
     # Extensions
     db.init_app(app)
