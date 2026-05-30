@@ -1,0 +1,8 @@
+[project]
+name = "gestbtp"
+version = "1.0.0"
+description = "SaaS de gestion de chantier BTP"
+requires-python = ">=3.10"
+
+[tool.vercel]
+entrypoint = "run:app"

@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from app.extensions import db
+from app.models.user import enum_values
 
 
 class StatutChantier(str, Enum):
@@ -20,7 +21,9 @@ class Chantier(db.Model):
     client_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     responsable_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     budget = db.Column(db.Numeric(14, 2), default=0)
-    statut = db.Column(db.Enum(StatutChantier), default=StatutChantier.PREPARATION, nullable=False)
+    statut = db.Column(
+        db.Enum(StatutChantier, name='statutchantier', values_callable=enum_values),
+        default=StatutChantier.PREPARATION, nullable=False)
     date_debut = db.Column(db.Date)
     date_fin_prev = db.Column(db.Date)
     description = db.Column(db.Text)

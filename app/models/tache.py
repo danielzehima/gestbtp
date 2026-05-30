@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from enum import Enum
 from app.extensions import db
+from app.models.user import enum_values
 
 
 class PrioriteTache(str, Enum):
@@ -25,8 +26,12 @@ class Tache(db.Model):
     responsable_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     titre = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
-    priorite = db.Column(db.Enum(PrioriteTache), default=PrioriteTache.MOYENNE, nullable=False)
-    statut = db.Column(db.Enum(StatutTache), default=StatutTache.A_FAIRE, nullable=False)
+    priorite = db.Column(
+        db.Enum(PrioriteTache, name='prioritetache', values_callable=enum_values),
+        default=PrioriteTache.MOYENNE, nullable=False)
+    statut = db.Column(
+        db.Enum(StatutTache, name='statuttache', values_callable=enum_values),
+        default=StatutTache.A_FAIRE, nullable=False)
     date_limite = db.Column(db.Date)
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
 
