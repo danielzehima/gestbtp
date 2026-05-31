@@ -92,6 +92,26 @@ def webhook():
     except (InvalidOperation, TypeError):
         pass
 
+    # 5) Historique : valider (ou créer) la transaction correspondante
+    from app.models.paiement import Paiement, StatutPaiement
+    reference = data.get('reference') or data.get('ref')
+    paiement = Paiement.query.filter_by(reference=reference).first() if reference else None
+    if paiement:
+        paiement.statut = StatutPaiement.REUSSI
+        paiement.date_paiement = datetime.utcnow()
+        paiement.provider_ref = data.get('id') or paiement.provider_ref
+    else:
+        # paiement non initié depuis l'app (ou référence absente) : on trace quand même
+        paiement = Paiement(
+            compte_id=compte.id,
+            reference=reference or f"EXT-{datetime.utcnow().timestamp():.0f}",
+            plan=compte.plan.value,
+            montant=Decimal(str(montant)) if str(montant).replace('.', '', 1).isdigit() else 0,
+            statut=StatutPaiement.REUSSI,
+            date_paiement=datetime.utcnow(),
+        )
+        db.session.add(paiement)
+
     db.session.commit()
     current_app.logger.info(
         f"Webhook GenuisPay : {user.email} (entreprise {compte.nom}) "

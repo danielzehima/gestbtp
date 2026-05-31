@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Mon abonnement - GESTBTP{% endblock %}
+{% block content %}
+<h1 class="page-title">Mon abonnement</h1>
+<p class="page-subtitle">{{ compte.nom }}</p>
+
+<!-- Forfait actuel -->
+<div class="card" style="border-left:4px solid var(--primary)">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div>
+      <div class="label" style="color:var(--text-muted);font-size:12px;text-transform:uppercase">Forfait actuel</div>
+      <div style="font-size:28px;font-weight:800">{{ plan_actuel|capitalize }}</div>
+      <div style="margin-top:6px">
+        {% if compte.statut_abo.value == 'actif' %}<span class="badge badge-en_cours">Actif</span>
+        {% elif compte.statut_abo.value == 'suspendu' %}<span class="badge badge-suspendu">Suspendu</span>
+        {% else %}<span class="badge badge-bloque">Annulé</span>{% endif %}
+      </div>
+    </div>
+    <div style="text-align:right;color:var(--text-muted);font-size:14px">
+      <div>Chantiers : <strong>{{ limites.max_chantiers if limites.max_chantiers is not none else '∞' }}</strong></div>
+      <div>Utilisateurs : <strong>{{ limites.max_utilisateurs if limites.max_utilisateurs is not none else '∞' }}</strong></div>
+      <div>Export PDF : <strong>{{ 'Oui' if limites.export_pdf else 'Non' }}</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- Offres -->
+{% if owner %}
+<h2 style="margin:24px 0 14px;font-size:20px">Changer de forfait</h2>
+<div class="row g-3">
+  {% for o in offres %}
+  <div class="col-md-4">
+    <div class="card {{ 'border-primary' if o.key == 'pro' else '' }}" style="height:100%;{{ 'border:2px solid var(--primary);' if o.key=='pro' }}">
+      {% if o.key == 'pro' %}<span class="badge" style="background:var(--primary);color:#fff">★ Recommandé</span>{% endif %}
+      <h3 style="font-size:20px;margin:8px 0">{{ o.label }}</h3>
+      <div style="font-size:26px;font-weight:800">
+        {% if o.prix is not none %}{{ "{:,.0f}".format(o.prix).replace(',', ' ') }} <span style="font-size:13px;color:var(--text-muted)">FCFA/mois</span>{% else %}Sur devis{% endif %}
+      </div>
+      <ul style="list-style:none;padding:0;margin:16px 0;font-size:14px">
+        <li style="padding:4px 0"><i class="fas fa-hard-hat" style="color:var(--primary);width:20px"></i> {{ o.max_chantiers if o.max_chantiers is not none else 'Chantiers illimités' }}{{ ' chantiers' if o.max_chantiers is not none }}</li>
+        <li style="padding:4px 0"><i class="fas fa-users" style="color:var(--primary);width:20px"></i> {{ o.max_utilisateurs if o.max_utilisateurs is not none else 'Utilisateurs illimités' }}{{ ' utilisateurs' if o.max_utilisateurs is not none }}</li>
+        <li style="padding:4px 0"><i class="fas fa-file-pdf" style="color:var(--primary);width:20px"></i> Export PDF {{ 'inclus' if o.export_pdf else 'non inclus' }}</li>
+      </ul>
+      {% if o.actuel %}
+        <button class="btn btn-outline" style="width:100%;justify-content:center" disabled>Forfait actuel</button>
+      {% elif o.key == 'entreprise' %}
+        <a href="{{ url_for('pages.contact') }}" class="btn btn-dark" style="width:100%;justify-content:center">Nous contacter</a>
+      {% else %}
+        <form method="post" action="{{ url_for('billing.payer', plan=o.key) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+            <i class="fas fa-arrow-up"></i> Passer à {{ o.label }}
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p style="color:var(--text-muted);margin-top:20px">Seul le propriétaire de l'entreprise peut gérer l'abonnement.</p>
+{% endif %}
+
+<!-- Historique -->
+<h2 style="margin:28px 0 14px;font-size:20px">Historique de paiement</h2>
+<table class="data">
+  <thead><tr><th>Référence</th><th>Forfait</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead>
+  <tbody>
+    {% for p in paiements %}
+    <tr>
+      <td><small>{{ p.reference }}</small></td>
+      <td>{{ p.plan|capitalize if p.plan }}</td>
+      <td>{{ "{:,.0f}".format(p.montant).replace(',', ' ') }} FCFA</td>
+      <td>
+        {% if p.statut.value == 'reussi' %}<span class="badge badge-en_cours">Réussi</span>
+        {% elif p.statut.value == 'en_attente' %}<span class="badge badge-moyenne">En attente</span>
+        {% else %}<span class="badge badge-bloque">Échoué</span>{% endif %}
+      </td>
+      <td>{{ p.date_creation.strftime('%d/%m/%Y %H:%M') if p.date_creation else '—' }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">Aucun paiement pour le moment.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
