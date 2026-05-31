@@ -15,6 +15,16 @@ class Photo(db.Model):
 
     uploader = db.relationship('User', foreign_keys=[uploader_id])
 
+    @property
+    def url(self):
+        """URL d'affichage de la photo : URL Supabase complète, ou ancien
+        chemin local servi par /static (rétrocompatibilité)."""
+        cf = self.chemin_fichier or ''
+        if cf.startswith('http://') or cf.startswith('https://'):
+            return cf
+        from flask import url_for
+        return url_for('static', filename=cf)
+
     def to_dict(self):
         return {
             'id': self.id, 'chantier_id': self.chantier_id,

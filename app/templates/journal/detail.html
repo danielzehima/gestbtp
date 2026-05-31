@@ -26,7 +26,7 @@
   <h3>Photos</h3>
   <div class="gallery">
     {% for p in rapport.photos %}
-    <div class="photo"><img src="{{ url_for('static', filename=p.chemin_fichier) }}"></div>
+    <div class="photo"><img src="{{ p.url }}" loading="lazy"></div>
     {% endfor %}
   </div>
 </div>

@@ -17,7 +17,7 @@
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-bottom:12px">
         {% for p in item.apercu %}
         <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:#eee">
-          <img src="{{ url_for('static', filename=p.chemin_fichier) }}"
+          <img src="{{ p.url }}" loading="lazy"
                style="width:100%;height:100%;object-fit:cover" alt="">
         </div>
         {% endfor %}

@@ -15,7 +15,7 @@
   <div class="gallery">
     {% for p in photos %}
       <div class="photo">
-        <img src="{{ url_for('static', filename=p.chemin_fichier) }}">
+        <img src="{{ p.url }}" loading="lazy">
         {% if current_user.role.value in ['admin','conducteur'] %}
         <div class="actions">
           <form method="post" action="{{ url_for('photos.supprimer', id=p.id) }}" data-confirm="Supprimer ?" style="display:inline">

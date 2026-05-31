@@ -5,6 +5,7 @@ from app.extensions import db
 from app.models.photo import Photo
 from app.models.chantier import Chantier
 from app.utils.helpers import save_upload, allowed_file
+from app.services.storage_service import upload_photo, delete_photo, is_configured
 from app.auth.decorators import role_required
 
 photos_bp = Blueprint('photos', __name__)
@@ -40,22 +41,36 @@ def galerie(chantier_id):
 @role_required('admin', 'conducteur')
 def upload(chantier_id):
     chantier = Chantier.query.get_or_404(chantier_id)
-    folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'chantiers')
     count = 0
+    errors = 0
     for f in request.files.getlist('photos'):
         if f and f.filename and allowed_file(f.filename, current_app.config['ALLOWED_PHOTO_EXTENSIONS']):
-            fname, _ = save_upload(f, folder)
-            photo = Photo(
-                chantier_id=chantier_id,
-                chemin_fichier=f"uploads/chantiers/{fname}",
-                nom_fichier=f.filename,
-                legende=request.form.get('legende'),
-                uploader_id=current_user.id,
-            )
-            db.session.add(photo)
-            count += 1
+            try:
+                nom = f.filename
+                if is_configured():
+                    # Stockage permanent dans Supabase Storage
+                    chemin = upload_photo(f, folder='chantiers')
+                else:
+                    # Repli local (développement sans Supabase)
+                    fname, _ = save_upload(f, os.path.join(current_app.config['UPLOAD_FOLDER'], 'chantiers'))
+                    chemin = f"uploads/chantiers/{fname}"
+                photo = Photo(
+                    chantier_id=chantier_id,
+                    chemin_fichier=chemin,
+                    nom_fichier=nom,
+                    legende=request.form.get('legende'),
+                    uploader_id=current_user.id,
+                )
+                db.session.add(photo)
+                count += 1
+            except Exception as exc:
+                current_app.logger.error(f"Upload photo échoué: {exc}")
+                errors += 1
     db.session.commit()
-    flash(f"{count} photo(s) ajoutée(s).", 'success')
+    if count:
+        flash(f"{count} photo(s) ajoutée(s).", 'success')
+    if errors:
+        flash(f"{errors} photo(s) n'ont pas pu être envoyées.", 'danger')
     return redirect(url_for('photos.galerie', chantier_id=chantier_id))
 
 
@@ -65,12 +80,14 @@ def upload(chantier_id):
 def supprimer(id):
     photo = Photo.query.get_or_404(id)
     chantier_id = photo.chantier_id
+    cf = photo.chemin_fichier or ''
     try:
-        path = os.path.join(current_app.config['UPLOAD_FOLDER'].replace('app/static/uploads', 'app/static'),
-                            photo.chemin_fichier.replace('uploads/', 'uploads/'))
-        full = os.path.join('app', 'static', photo.chemin_fichier)
-        if os.path.exists(full):
-            os.remove(full)
+        if cf.startswith('http'):
+            delete_photo(cf)  # Supabase Storage
+        else:
+            full = os.path.join('app', 'static', cf)  # ancien fichier local
+            if os.path.exists(full):
+                os.remove(full)
     except Exception:
         pass
     db.session.delete(photo)

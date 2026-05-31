@@ -43,6 +43,11 @@ class Config:
 
     WTF_CSRF_ENABLED = True
 
+    # Supabase Storage (photos)
+    SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+    SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
+    SUPABASE_BUCKET = os.environ.get('SUPABASE_BUCKET', 'photos')
+
     COMPANY_NAME = "GESTBTP"
     COMPANY_COLOR_PRIMARY = "#FF6B00"
     COMPANY_COLOR_DARK = "#111111"

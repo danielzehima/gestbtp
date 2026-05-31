@@ -43,20 +43,28 @@ def nouveau():
         db.session.add(rapport)
         db.session.flush()
 
-        # Photos
+        # Photos -> Supabase Storage (avec repli local en dev)
+        from app.services.storage_service import upload_photo, is_configured
         photo_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'chantiers')
         for f in form.photos.data or []:
             if f and f.filename and allowed_file(f.filename, current_app.config['ALLOWED_PHOTO_EXTENSIONS']):
-                fname, _ = save_upload(f, photo_folder)
-                photo = Photo(
-                    chantier_id=form.chantier_id.data,
-                    chemin_fichier=f"uploads/chantiers/{fname}",
-                    nom_fichier=f.filename,
-                    uploader_id=current_user.id,
-                )
-                db.session.add(photo)
-                db.session.flush()
-                rapport.photos.append(photo)
+                try:
+                    if is_configured():
+                        chemin = upload_photo(f, folder='chantiers')
+                    else:
+                        fname, _ = save_upload(f, photo_folder)
+                        chemin = f"uploads/chantiers/{fname}"
+                    photo = Photo(
+                        chantier_id=form.chantier_id.data,
+                        chemin_fichier=chemin,
+                        nom_fichier=f.filename,
+                        uploader_id=current_user.id,
+                    )
+                    db.session.add(photo)
+                    db.session.flush()
+                    rapport.photos.append(photo)
+                except Exception as exc:
+                    current_app.logger.error(f"Upload photo rapport échoué: {exc}")
 
         # Documents
         doc_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'documents')
