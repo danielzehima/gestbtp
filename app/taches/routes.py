@@ -6,6 +6,7 @@ from app.models.chantier import Chantier
 from app.models.user import User
 from app.taches.forms import TacheForm
 from app.auth.decorators import role_required
+from app.utils.plans import abonnement_requis
 from app.services.notification_service import notify_user
 
 taches_bp = Blueprint('taches', __name__)
@@ -18,6 +19,7 @@ def _populate(form):
 
 @taches_bp.route('/')
 @login_required
+@abonnement_requis
 def liste():
     statut = request.args.get('statut')
     query = Tache.query

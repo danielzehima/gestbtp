@@ -8,12 +8,14 @@ from app.models.photo import Photo
 from app.journal.forms import RapportForm
 from app.utils.helpers import save_upload, allowed_file
 from app.auth.decorators import role_required
+from app.utils.plans import abonnement_requis
 
 journal_bp = Blueprint('journal', __name__)
 
 
 @journal_bp.route('/')
 @login_required
+@abonnement_requis
 def liste():
     date_filter = request.args.get('date')
     query = Rapport.query
