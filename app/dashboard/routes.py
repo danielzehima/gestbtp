@@ -8,6 +8,7 @@ from app.models.tache import Tache, StatutTache
 from app.models.user import User, RoleEnum, PlanEnum, StatutAboEnum
 from app.models.compte import Compte
 from app.auth.decorators import role_required
+from app.utils.plans import abonnement_requis
 from app.extensions import db
 
 dashboard_bp = Blueprint('dashboard', __name__)
@@ -22,6 +23,7 @@ def root():
 
 @dashboard_bp.route('/dashboard')
 @login_required
+@abonnement_requis
 def index():
     total = Chantier.query.count()
     actifs = Chantier.query.filter_by(statut=StatutChantier.EN_COURS).count()

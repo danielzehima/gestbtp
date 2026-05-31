@@ -3,16 +3,18 @@ paiement, et passage à un forfait supérieur via GenuisPay.
 """
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
+from app.extensions import db
 from app.models.user import RoleEnum
 from app.models.paiement import Paiement
 from app.services.compte_service import get_or_create_compte
 from app.services.geniuspay_service import initiate_payment
-from app.utils.plans import PLAN_LIMITS, get_compte
+from app.utils.plans import PLAN_LIMITS, get_compte, acces_actif
 
-billing_bp = Blueprint('billing', __name__, url_prefix='/abonnement')
+# Pas de url_prefix : on expose à la fois /abonnement (gestion) et /paiement (blocage)
+billing_bp = Blueprint('billing', __name__)
 
 
-@billing_bp.route('/')
+@billing_bp.route('/abonnement')
 @login_required
 def index():
     if current_user.role == RoleEnum.ADMIN:
@@ -42,7 +44,7 @@ def index():
                            offres=offres, paiements=paiements)
 
 
-@billing_bp.route('/payer/<plan>', methods=['POST'])
+@billing_bp.route('/abonnement/payer/<plan>', methods=['POST'])
 @login_required
 def payer(plan):
     compte = get_compte(current_user)
@@ -64,10 +66,63 @@ def payer(plan):
     return redirect(url_for('billing.index'))
 
 
-@billing_bp.route('/retour')
+@billing_bp.route('/abonnement/retour')
 @login_required
 def retour():
     """Page de retour après paiement (la confirmation réelle vient du webhook)."""
     reference = request.args.get('reference')
     paiement = Paiement.query.filter_by(reference=reference).first() if reference else None
     return render_template('billing/retour.html', paiement=paiement)
+
+
+@billing_bp.route('/paiement')
+@login_required
+def paiement():
+    """Page affichée quand l'essai est terminé / un abonnement est requis.
+    Présente les forfaits payants + (le cas échéant) l'option d'essai gratuit."""
+    if current_user.role == RoleEnum.ADMIN:
+        return redirect(url_for('dashboard.index'))
+
+    compte = get_or_create_compte(current_user)
+    # Si l'accès est déjà actif (abonné ou essai en cours), pas besoin de bloquer
+    if acces_actif(compte):
+        return redirect(url_for('dashboard.index'))
+
+    offres = []
+    for key in ('starter', 'pro'):
+        infos = PLAN_LIMITS[key]
+        offres.append({'key': key, 'label': infos['label'], 'prix': infos['prix'],
+                       'max_chantiers': infos['max_chantiers'],
+                       'max_utilisateurs': infos['max_utilisateurs'],
+                       'export_pdf': infos['export_pdf']})
+
+    # L'essai n'est proposable que si l'entreprise n'en a jamais eu
+    essai_disponible = (compte.date_fin_essai is None)
+    essai_termine = (compte.date_fin_essai is not None and not compte.en_essai)
+
+    return render_template('billing/paiement.html',
+                           compte=compte, offres=offres,
+                           owner=(compte.owner_id == current_user.id),
+                           essai_disponible=essai_disponible,
+                           essai_termine=essai_termine)
+
+
+@billing_bp.route('/paiement/essai', methods=['POST'])
+@login_required
+def demarrer_essai():
+    """Le visiteur en souscription directe change d'avis et veut d'abord
+    l'essai gratuit de 14 jours (uniquement s'il n'en a jamais eu)."""
+    from datetime import datetime, timedelta
+    compte = get_or_create_compte(current_user)
+    if compte.owner_id != current_user.id:
+        abort(403)
+    if compte.date_fin_essai is not None:
+        flash("Votre entreprise a déjà bénéficié de l'essai gratuit.", 'warning')
+        return redirect(url_for('billing.paiement'))
+    from app.models.user import PlanEnum
+    compte.plan = PlanEnum.STARTER
+    compte.date_fin_essai = datetime.utcnow() + timedelta(days=14)
+    compte.est_abonne = False
+    db.session.commit()
+    flash("🎉 Essai gratuit de 14 jours activé !", 'success')
+    return redirect(url_for('dashboard.index'))

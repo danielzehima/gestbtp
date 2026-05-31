@@ -25,11 +25,33 @@ class Compte(db.Model):
     revenu_genere = db.Column(db.Numeric(12, 2), default=0)
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # ===== Essai gratuit & abonnement payant =====
+    est_abonne = db.Column(db.Boolean, default=False)        # a payé au moins une fois
+    date_fin_essai = db.Column(db.DateTime)                  # fin de l'essai gratuit (None = jamais d'essai)
+
     # Membres de l'entreprise (équipe)
     membres = db.relationship(
         'User', backref='compte', lazy='dynamic',
         foreign_keys='User.compte_id')
     owner = db.relationship('User', foreign_keys=[owner_id])
+
+    @property
+    def en_essai(self):
+        """True si l'entreprise est dans une période d'essai encore valide."""
+        return bool(self.date_fin_essai and datetime.utcnow() < self.date_fin_essai)
+
+    @property
+    def jours_essai_restants(self):
+        if not self.date_fin_essai:
+            return 0
+        delta = self.date_fin_essai - datetime.utcnow()
+        return max(0, delta.days + (1 if delta.seconds else 0))
+
+    @property
+    def acces_actif(self):
+        """L'entreprise a accès aux fonctionnalités si elle est abonnée
+        OU si son essai gratuit est encore valide."""
+        return bool(self.est_abonne or self.en_essai)
 
     @property
     def nb_membres(self):

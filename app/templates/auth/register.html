@@ -5,13 +5,20 @@
   <div class="auth-card">
     <div style="text-align:center;margin-bottom:20px"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="GESTBTP" style="height:140px"></div>
     <h2>Créer un compte</h2>
-    {% if request.args.get('plan') %}
+    {% if plan in ('starter', 'pro') %}
       <div class="flash flash-info" style="font-size:13px">
-        Plan sélectionné : <strong>{{ request.args.get('plan')|capitalize }}</strong>
+        Forfait choisi : <strong>{{ plan|capitalize }}</strong> — vous serez dirigé vers le paiement après inscription.
+      </div>
+    {% else %}
+      <div class="flash flash-success" style="font-size:13px">
+        🎁 Essai gratuit de <strong>14 jours</strong> — aucune carte requise.
       </div>
     {% endif %}
-    <form method="post">
+    <form method="post" action="{{ url_for('auth.register', plan=plan) }}">
       {{ form.hidden_tag() }}
+      <input type="hidden" name="plan" value="{{ plan }}">
+
+
       <div class="form-group">{{ form.nom.label }} {{ form.nom() }}</div>
       <div class="form-group">{{ form.email.label }} {{ form.email() }}</div>
       <div class="form-group">{{ form.telephone.label }} {{ form.telephone() }}</div>

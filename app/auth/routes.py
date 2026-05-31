@@ -27,11 +27,15 @@ def login():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
+    from datetime import datetime, timedelta
+    from app.models.user import PlanEnum
+    # plan choisi : 'essai' (défaut), 'starter' ou 'pro'
+    plan = (request.values.get('plan') or 'essai').strip().lower()
     form = RegisterForm()
     if form.validate_on_submit():
         if User.query.filter_by(email=form.email.data.lower()).first():
             flash("Email déjà utilisé.", 'danger')
-            return render_template('auth/register.html', form=form)
+            return render_template('auth/register.html', form=form, plan=plan)
         user = User(
             nom=form.nom.data, email=form.email.data.lower(),
             telephone=form.telephone.data, role=RoleEnum(form.role.data),
@@ -39,12 +43,29 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+
         # Création de l'entreprise (compte/tenant) dont l'utilisateur est propriétaire
         from app.services.compte_service import get_or_create_compte
-        get_or_create_compte(user)
-        flash("Compte créé. Vous pouvez vous connecter.", 'success')
-        return redirect(url_for('auth.login'))
-    return render_template('auth/register.html', form=form)
+        compte = get_or_create_compte(user)
+
+        if plan in ('starter', 'pro'):
+            # SOUSCRIPTION DIRECTE : on vise le plan, pas d'essai -> page de paiement
+            compte.plan = PlanEnum(plan)
+            compte.est_abonne = False
+            db.session.commit()
+            login_user(user)
+            return redirect(url_for('billing.paiement', plan=plan))
+
+        # ESSAI GRATUIT 14 JOURS (avantages Starter)
+        compte.plan = PlanEnum.STARTER
+        compte.est_abonne = False
+        compte.date_fin_essai = datetime.utcnow() + timedelta(days=14)
+        db.session.commit()
+        login_user(user)
+        flash("🎉 Votre essai gratuit de 14 jours a démarré ! Profitez de toutes "
+              "les fonctionnalités du forfait Starter.", 'success')
+        return redirect(url_for('dashboard.index'))
+    return render_template('auth/register.html', form=form, plan=plan)
 
 
 @auth_bp.route('/logout')

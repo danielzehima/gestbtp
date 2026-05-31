@@ -16,6 +16,7 @@ Utilisation typique :
     def export(...): ...
 """
 from functools import wraps
+from datetime import datetime
 from flask import abort, flash, redirect, url_for
 from flask_login import current_user
 
@@ -139,6 +140,45 @@ def chantiers_restants(user):
     if limite is None:
         return None
     return max(0, limite - _count_chantiers(user))
+
+
+# ---------- Accès : essai valide OU abonnement payant ----------
+def acces_actif(compte):
+    """True si l'entreprise a un accès actif (abonnée ou essai en cours)."""
+    if not compte:
+        return False
+    if compte.est_abonne:
+        return True
+    if compte.date_fin_essai and datetime.utcnow() < compte.date_fin_essai:
+        return True
+    return False
+
+
+def abonnement_requis(f):
+    """Bloque l'accès si l'entreprise n'est ni en essai valide ni abonnée.
+    À placer APRÈS @login_required.
+
+    Exemple :
+        @dashboard_bp.route('/dashboard')
+        @login_required
+        @abonnement_requis
+        def index(): ...
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.login'))
+        from app.models.user import RoleEnum
+        # L'admin (opérateur SaaS) n'est jamais bloqué
+        if current_user.role == RoleEnum.ADMIN:
+            return f(*args, **kwargs)
+        compte = get_compte(current_user)
+        if acces_actif(compte):
+            return f(*args, **kwargs)
+        flash("Votre période d'essai est terminée ou un abonnement est requis "
+              "pour accéder à cette fonctionnalité.", 'warning')
+        return redirect(url_for('billing.paiement'))
+    return wrapper
 
 
 # ---------- Décorateur pour bloquer une fonctionnalité premium ----------

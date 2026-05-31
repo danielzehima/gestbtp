@@ -96,6 +96,7 @@ def webhook():
         if user:
             user.plan = nouveau_plan  # champ user synchronisé (compat.)
     compte.statut_abo = StatutAboEnum.ACTIF
+    compte.est_abonne = True  # l'entreprise est désormais abonnée payante
     if user:
         user.statut_abo = StatutAboEnum.ACTIF
     compte.date_souscription = datetime.utcnow()

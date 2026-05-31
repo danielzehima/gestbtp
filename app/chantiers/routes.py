@@ -5,7 +5,7 @@ from app.models.chantier import Chantier, StatutChantier
 from app.models.user import User, RoleEnum
 from app.chantiers.forms import ChantierForm
 from app.auth.decorators import role_required
-from app.utils.plans import can_create_chantier, chantiers_restants, get_compte
+from app.utils.plans import can_create_chantier, chantiers_restants, get_compte, abonnement_requis
 
 chantiers_bp = Blueprint('chantiers', __name__)
 
@@ -22,6 +22,7 @@ def _populate_form_choices(form):
 
 @chantiers_bp.route('/')
 @login_required
+@abonnement_requis
 def liste():
     statut = request.args.get('statut')
     q = request.args.get('q', '')

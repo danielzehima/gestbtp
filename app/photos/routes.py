@@ -7,12 +7,14 @@ from app.models.chantier import Chantier
 from app.utils.helpers import save_upload, allowed_file
 from app.services.storage_service import upload_photo, delete_photo, is_configured
 from app.auth.decorators import role_required
+from app.utils.plans import abonnement_requis
 
 photos_bp = Blueprint('photos', __name__)
 
 
 @photos_bp.route('/')
 @login_required
+@abonnement_requis
 def index():
     """Page Photos globale : liste des chantiers avec leur nombre de photos
     et un aperçu, pour accéder à la galerie de chacun."""

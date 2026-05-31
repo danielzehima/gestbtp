@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Abonnement requis - GESTBTP{% endblock %}
+{% block content %}
+<div style="max-width:900px;margin:0 auto;text-align:center">
+
+  {% if essai_termine %}
+    <div style="font-size:48px;color:var(--primary)"><i class="fas fa-hourglass-end"></i></div>
+    <h1 class="page-title" style="margin-top:14px">Votre essai gratuit est terminé</h1>
+    <p class="page-subtitle">Pour continuer à utiliser GESTBTP, choisissez un forfait ci-dessous.</p>
+  {% else %}
+    <div style="font-size:48px;color:var(--primary)"><i class="fas fa-lock"></i></div>
+    <h1 class="page-title" style="margin-top:14px">Un abonnement est requis</h1>
+    <p class="page-subtitle">Choisissez votre forfait pour accéder à toutes les fonctionnalités.</p>
+  {% endif %}
+
+  <!-- Forfaits -->
+  <div class="row g-3" style="margin-top:10px;text-align:left">
+    {% for o in offres %}
+    <div class="col-md-6">
+      <div class="card {{ 'featured' if o.key=='pro' else '' }}" style="height:100%;{{ 'border:2px solid var(--primary);' if o.key=='pro' }}">
+        {% if o.key == 'pro' %}<span class="badge" style="background:var(--primary);color:#fff">★ Recommandé</span>{% endif %}
+        <h3 style="font-size:22px;margin:8px 0">{{ o.label }}</h3>
+        <div style="font-size:30px;font-weight:800">
+          {{ "{:,.0f}".format(o.prix).replace(',', ' ') }} <span style="font-size:13px;color:var(--text-muted)">FCFA/mois</span>
+        </div>
+        <ul style="list-style:none;padding:0;margin:16px 0;font-size:14px">
+          <li style="padding:5px 0"><i class="fas fa-hard-hat" style="color:var(--primary);width:22px"></i> {{ o.max_chantiers if o.max_chantiers is not none else 'Chantiers illimités' }}{{ ' chantiers' if o.max_chantiers is not none }}</li>
+          <li style="padding:5px 0"><i class="fas fa-users" style="color:var(--primary);width:22px"></i> {{ o.max_utilisateurs if o.max_utilisateurs is not none else 'Utilisateurs illimités' }}{{ ' utilisateurs' if o.max_utilisateurs is not none }}</li>
+          <li style="padding:5px 0"><i class="fas fa-file-pdf" style="color:var(--primary);width:22px"></i> Export PDF {{ 'inclus' if o.export_pdf else 'non inclus' }}</li>
+        </ul>
+        {% if owner %}
+        <form method="post" action="{{ url_for('billing.payer', plan=o.key) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+            <i class="fas fa-credit-card"></i> Payer {{ o.label }}
+          </button>
+        </form>
+        {% else %}
+        <p style="color:var(--text-muted);font-size:13px">Contactez le propriétaire de l'entreprise pour l'abonnement.</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Option essai gratuit (souscription directe : "je veux d'abord essayer") -->
+  {% if owner and essai_disponible %}
+  <div class="card" style="margin-top:20px;background:var(--bg-soft)">
+    <p style="margin-bottom:12px">Pas encore décidé ?</p>
+    <form method="post" action="{{ url_for('billing.demarrer_essai') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-secondary">
+        <i class="fas fa-gift"></i> Je veux d'abord essayer gratuitement pendant 14 jours
+      </button>
+    </form>
+  </div>
+  {% endif %}
+
+  <p style="margin-top:24px"><a href="{{ url_for('auth.logout') }}" style="color:var(--text-muted)">Se déconnecter</a></p>
+</div>
+{% endblock %}
