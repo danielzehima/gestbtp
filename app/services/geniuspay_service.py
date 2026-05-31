@@ -13,8 +13,9 @@ from app.extensions import db
 from app.models.paiement import Paiement, StatutPaiement
 from app.utils.plans import PLAN_LIMITS
 
-# Endpoint d'initialisation de paiement chez GenuisPay (à adapter)
-_ENDPOINT = '/v1/payments/initialize'
+# Base GeniusPay (config GENIUSPAY_BASE_URL) = https://geniuspay.ci/api/v1/merchant
+# Endpoint de création de paiement
+_ENDPOINT = '/payments'
 
 
 def _new_reference():
@@ -39,49 +40,56 @@ def initiate_payment(compte, plan_key, customer_email):
     db.session.commit()
 
     api_key = current_app.config.get('GENIUSPAY_API_KEY', '')
+    api_secret = current_app.config.get('GENIUSPAY_SECRET_KEY', '')
     base = current_app.config.get('GENIUSPAY_BASE_URL', '').rstrip('/')
-    if not api_key or not base:
-        # Non configuré : on ne peut pas rediriger, on retourne juste le paiement en attente
-        current_app.logger.info("GenuisPay non configuré : paiement en attente créé sans redirection.")
+    if not api_key or not api_secret or not base:
+        current_app.logger.info("GeniusPay non configuré : paiement en attente créé sans redirection.")
         return None, paiement
 
+    # Payload GeniusPay : montant entier (FCFA), client, métadonnées.
+    # En omettant payment_method, l'API renvoie une checkout_url.
     payload = {
-        'amount': float(montant),
-        'currency': 'XOF',
-        'reference': reference,
-        'customer_email': customer_email,
+        'amount': int(montant),
+        'customer': {'email': customer_email},
         'description': f"Abonnement GESTBTP {plan_key} - {compte.nom}",
-        'callback_url': url_for('payments.webhook', _external=True),
-        'return_url': url_for('billing.retour', reference=reference, _external=True),
-        'metadata': {'compte_id': compte.id, 'plan': plan_key},
+        'metadata': {
+            'compte_id': compte.id,
+            'plan': plan_key,
+            'ref_interne': reference,
+        },
     }
     req = urllib.request.Request(
         base + _ENDPOINT,
         data=json.dumps(payload).encode('utf-8'),
         method='POST',
         headers={
-            'Authorization': f'Bearer {api_key}',
+            'X-API-Key': api_key,
+            'X-API-Secret': api_secret,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
         },
     )
     try:
         with urllib.request.urlopen(req, timeout=20) as resp:
             body = json.loads(resp.read().decode('utf-8'))
     except urllib.error.HTTPError as e:
-        current_app.logger.error(f"GenuisPay init échec ({e.code}): {e.read()[:200]}")
+        current_app.logger.error(f"GeniusPay init échec HTTP ({e.code}): {e.read()[:300]}")
+        paiement.statut = StatutPaiement.ECHOUE
+        db.session.commit()
+        return None, paiement
+    except Exception as e:
+        current_app.logger.error(f"GeniusPay init erreur: {e!r}")
         paiement.statut = StatutPaiement.ECHOUE
         db.session.commit()
         return None, paiement
 
-    # On cherche l'URL de paiement dans les champs habituels
-    payment_url = (
-        body.get('payment_url') or body.get('checkout_url') or body.get('url')
-        or (body.get('data') or {}).get('payment_url')
-        or (body.get('data') or {}).get('authorization_url')
-    )
-    provider_ref = body.get('id') or body.get('transaction_id') or (body.get('data') or {}).get('id')
-    if provider_ref:
-        paiement.provider_ref = str(provider_ref)
+    data = body.get('data', body) or {}
+    payment_url = data.get('checkout_url') or body.get('checkout_url')
+    # La référence GeniusPay (MTX-...) devient la référence officielle du paiement
+    mtx = data.get('reference') or body.get('reference')
+    if mtx:
+        paiement.provider_ref = str(mtx)
+        paiement.reference = str(mtx)
         db.session.commit()
 
     return payment_url, paiement
