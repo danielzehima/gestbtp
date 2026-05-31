@@ -67,6 +67,11 @@ def initiate_payment(compte, plan_key, customer_email):
             'X-API-Secret': api_secret,
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            # User-Agent de navigateur : geniuspay.ci est derrière Cloudflare,
+            # qui bloque les requêtes au User-Agent par défaut (Python-urllib).
+            'User-Agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                           'AppleWebKit/537.36 (KHTML, like Gecko) '
+                           'Chrome/124.0.0.0 Safari/537.36'),
         },
     )
     try:
