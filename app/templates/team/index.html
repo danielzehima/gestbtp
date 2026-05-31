@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Mon équipe - GESTBTP{% endblock %}
+{% block content %}
+<h1 class="page-title">Mon équipe</h1>
+<p class="page-subtitle">{{ compte.nom }} — forfait <strong>{{ compte.plan.value|capitalize }}</strong></p>
+
+<!-- Jauge de places -->
+<div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+  <div>
+    <div class="label" style="color:var(--text-muted);font-size:12px;text-transform:uppercase">Membres</div>
+    <div style="font-size:24px;font-weight:700">
+      {{ places_utilisees }}{% if limite is not none %} / {{ limite }}{% else %} / ∞{% endif %}
+    </div>
+  </div>
+  {% if limite is not none %}
+  <div style="flex:1;min-width:200px;max-width:400px">
+    <div style="height:10px;background:#eee;border-radius:5px;overflow:hidden">
+      <div style="height:100%;background:var(--primary);width:{{ (places_utilisees / limite * 100)|round|int if limite else 0 }}%"></div>
+    </div>
+  </div>
+  {% endif %}
+  {% if not peut_ajouter %}
+    <span class="badge badge-critique">Limite atteinte</span>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  <!-- Liste des membres -->
+  <div class="col-lg-8">
+    <table class="data">
+      <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th>{% if owner %}<th>Actions</th>{% endif %}</tr></thead>
+      <tbody>
+        {% for m in membres %}
+        <tr>
+          <td><strong>{{ m.nom }}</strong>{% if m.id == compte.owner_id %} <span class="badge badge-en_cours">Propriétaire</span>{% endif %}</td>
+          <td>{{ m.email }}</td>
+          <td>{{ m.role.value|capitalize }}</td>
+          <td>{% if m.actif %}<span class="badge badge-en_cours">Actif</span>{% else %}<span class="badge badge-bloque">Inactif</span>{% endif %}</td>
+          {% if owner %}
+          <td>
+            {% if m.id != compte.owner_id %}
+            <form method="post" action="{{ url_for('team.retirer', id=m.id) }}" data-confirm="Retirer ce membre de l'équipe ?" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger btn-sm"><i class="fas fa-user-minus"></i></button>
+            </form>
+            {% else %}—{% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">Aucun membre.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Formulaire d'ajout (propriétaire uniquement) -->
+  <div class="col-lg-4">
+    {% if owner %}
+    <div class="card">
+      <div class="card-header"><h2 style="font-size:16px;margin:0">Ajouter un membre</h2></div>
+      {% if peut_ajouter %}
+      <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="form-group">{{ form.nom.label }} {{ form.nom(class="form-control") }}</div>
+        <div class="form-group">{{ form.email.label }} {{ form.email(class="form-control") }}</div>
+        <div class="form-group">{{ form.telephone.label }} {{ form.telephone(class="form-control") }}</div>
+        <div class="form-group">{{ form.role.label }} {{ form.role(class="form-select") }}</div>
+        <div class="form-group">{{ form.password.label }} {{ form.password(class="form-control") }}</div>
+        {{ form.submit(class="btn btn-primary", style="width:100%;justify-content:center") }}
+      </form>
+      {% else %}
+      <p style="color:var(--text-muted)">Vous avez atteint la limite de votre forfait. Passez à un forfait supérieur pour ajouter plus de membres.</p>
+      <a href="{{ url_for('dashboard.root') }}#pricing" class="btn btn-primary" style="width:100%;justify-content:center">Voir les forfaits</a>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="card" style="color:var(--text-muted)">
+      Seul le propriétaire de l'entreprise peut gérer les membres.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
