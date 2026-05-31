@@ -27,6 +27,21 @@ async function gbtpResizeImage(file, maxDim = 1600, quality = 0.8) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Retour visuel : afficher les fichiers choisis (utile sur mobile où le
+  // nom n'apparaît pas à côté du bouton de sélection).
+  document.querySelectorAll('form[data-photo-upload] input[type="file"]').forEach(input => {
+    let feedback = document.createElement('div');
+    feedback.style.cssText = 'font-size:13px;color:#555;margin-top:6px;width:100%';
+    input.insertAdjacentElement('afterend', feedback);
+    input.addEventListener('change', () => {
+      const files = Array.from(input.files || []);
+      if (!files.length) { feedback.textContent = ''; return; }
+      const names = files.map(f => f.name).join(', ');
+      feedback.innerHTML = '<i class="fas fa-check" style="color:#16A34A"></i> ' +
+        files.length + ' fichier(s) sélectionné(s) : ' + names;
+    });
+  });
+
   document.querySelectorAll('form[data-photo-upload]').forEach(form => {
     form.addEventListener('submit', async e => {
       const input = form.querySelector('input[type="file"]');
