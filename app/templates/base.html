@@ -26,6 +26,7 @@
       <a href="{{ url_for('billing.index') }}" class="{{ 'active' if 'billing' in (request.endpoint or '') }}"><i class="fas fa-credit-card"></i> Mon abonnement</a>
       {% else %}
       <a href="{{ url_for('dashboard.abonnes') }}" class="{{ 'active' if request.endpoint=='dashboard.abonnes' }}"><i class="fas fa-building"></i> Abonnés</a>
+      <a href="{{ url_for('admin.parametres') }}" class="{{ 'active' if request.endpoint=='admin.parametres' }}"><i class="fas fa-gear"></i> Paramètres</a>
       {% endif %}
       
       {% if current_user.is_admin %}

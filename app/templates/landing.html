@@ -368,9 +368,14 @@
     <button class="modal-close" data-close-modal aria-label="Fermer"><i class="fas fa-times"></i></button>
     <h3 id="demoModalTitle" style="margin-bottom:16px">Démonstration GESTBTP</h3>
     <div class="video-wrap">
-      <iframe id="demoIframe" src="" title="Démo GESTBTP" frameborder="0"
+      {% if DEMO_VIDEO_IS_IFRAME %}
+      <iframe id="demoIframe" src="" data-src="{{ DEMO_VIDEO_URL }}" title="Démo GESTBTP" frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen></iframe>
+      {% else %}
+      <video id="demoVideo" src="{{ DEMO_VIDEO_URL }}" controls preload="none"
+             style="position:absolute;inset:0;width:100%;height:100%;background:#000"></video>
+      {% endif %}
     </div>
     <p style="color:var(--muted);font-size:13px;margin-top:12px">Découvrez en 2 minutes comment GESTBTP transforme votre quotidien.</p>
   </div>
@@ -465,7 +470,10 @@ function openModal(id, opts={}){
   m.hidden = false;
   document.body.style.overflow = 'hidden';
   if(id === 'demoModal'){
-    document.getElementById('demoIframe').src = DEMO_VIDEO + '?autoplay=1&rel=0';
+    const ifr = document.getElementById('demoIframe');
+    const vid = document.getElementById('demoVideo');
+    if(ifr){ const u = ifr.dataset.src || DEMO_VIDEO; ifr.src = u + (u.includes('?')?'&':'?') + 'autoplay=1&rel=0'; }
+    if(vid){ vid.play().catch(()=>{}); }
   }
   if(id === 'featureModal'){
     document.getElementById('featureTitle').textContent = opts.title || '';
@@ -478,7 +486,10 @@ function openModal(id, opts={}){
 function closeModal(){
   document.querySelectorAll('.modal:not([hidden])').forEach(m=>{
     m.hidden = true;
-    if(m.id==='demoModal') document.getElementById('demoIframe').src='';
+    if(m.id==='demoModal'){
+      const ifr=document.getElementById('demoIframe'); if(ifr) ifr.src='';
+      const vid=document.getElementById('demoVideo'); if(vid){ vid.pause(); }
+    }
   });
   document.body.style.overflow = '';
 }

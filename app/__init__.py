@@ -38,7 +38,7 @@ def create_app(config_name='development'):
             pass
 
     # Import des modèles (pour Alembic / create_all)
-    from app.models import user, compte, chantier, rapport, tache, photo, notification, paiement  # noqa
+    from app.models import user, compte, chantier, rapport, tache, photo, notification, paiement, setting  # noqa
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -55,6 +55,7 @@ def create_app(config_name='development'):
     from app.pdf.routes import pdf_bp
     from app.team.routes import team_bp
     from app.billing.routes import billing_bp
+    from app.admin.routes import admin_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp)
@@ -65,6 +66,7 @@ def create_app(config_name='development'):
     app.register_blueprint(pdf_bp, url_prefix='/pdf')
     app.register_blueprint(team_bp)
     app.register_blueprint(billing_bp)
+    app.register_blueprint(admin_bp)
 
     # Blueprints API REST (CSRF désactivé pour API JWT)
     from app.api.auth_api import auth_api
@@ -79,11 +81,23 @@ def create_app(config_name='development'):
     # Context processor global
     @app.context_processor
     def inject_globals():
+        # Vidéo de démo : réglage admin (Setting) sinon valeur par défaut config
+        demo_url = app.config['DEMO_VIDEO_URL']
+        demo_is_iframe = True
+        try:
+            from app.models.setting import Setting
+            saved = Setting.get('demo_video_url')
+            if saved:
+                demo_url = saved
+            demo_is_iframe = ('youtube.com' in (demo_url or '')) or ('vimeo.com' in (demo_url or ''))
+        except Exception:
+            pass
         return {
             'COMPANY_NAME': app.config['COMPANY_NAME'],
             'COLOR_PRIMARY': app.config['COMPANY_COLOR_PRIMARY'],
             'SOCIAL': app.config['SOCIAL_LINKS'],
-            'DEMO_VIDEO_URL': app.config['DEMO_VIDEO_URL'],
+            'DEMO_VIDEO_URL': demo_url,
+            'DEMO_VIDEO_IS_IFRAME': demo_is_iframe,
             'CONTACT_EMAIL': app.config['CONTACT_EMAIL'],
             'CONTACT_PHONE': app.config['CONTACT_PHONE'],
             'CONTACT_ADDR': app.config['CONTACT_ADDR'],

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Paramètres - GESTBTP{% endblock %}
+{% block content %}
+<h1 class="page-title">Paramètres du site</h1>
+<p class="page-subtitle">Vidéo de démonstration affichée sur la page d'accueil</p>
+
+<div class="row g-3">
+  <!-- Aperçu de la vidéo actuelle -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header"><h2 style="font-size:16px;margin:0">Vidéo actuelle</h2></div>
+      {% if current_video %}
+        <div style="position:relative;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000">
+          {% if is_iframe %}
+            <iframe src="{{ current_video }}" style="position:absolute;inset:0;width:100%;height:100%" frameborder="0" allowfullscreen></iframe>
+          {% else %}
+            <video src="{{ current_video }}" controls style="position:absolute;inset:0;width:100%;height:100%"></video>
+          {% endif %}
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:10px;word-break:break-all">{{ current_video }}</p>
+        <form method="post" data-confirm="Réinitialiser la vidéo de démonstration ?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="reset">
+          <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-rotate-left"></i> Réinitialiser</button>
+        </form>
+      {% else %}
+        <p style="color:var(--text-muted)">Aucune vidéo configurée.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Formulaires de mise à jour -->
+  <div class="col-lg-6">
+    <!-- Option 1 : URL YouTube / Vimeo -->
+    <div class="card">
+      <div class="card-header"><h2 style="font-size:16px;margin:0">Option 1 — Lien YouTube / Vimeo</h2></div>
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+          <label for="video_url">Coller l'URL de la vidéo</label>
+          <input type="url" id="video_url" name="video_url" class="form-control"
+                 placeholder="https://www.youtube.com/watch?v=...">
+        </div>
+        <button type="submit" class="btn btn-dark"><i class="fas fa-link"></i> Enregistrer le lien</button>
+      </form>
+    </div>
+
+    <!-- Option 2 : Upload d'un fichier vidéo -->
+    <div class="card">
+      <div class="card-header"><h2 style="font-size:16px;margin:0">Option 2 — Uploader un fichier</h2></div>
+      <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+          <label for="video_file">Fichier vidéo (mp4, webm, mov…)</label>
+          <input type="file" id="video_file" name="video_file" class="form-control" accept="video/*">
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Uploader la vidéo</button>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
+          La vidéo est stockée sur Supabase Storage. Conseil : compressez-la pour un chargement rapide.
+        </p>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

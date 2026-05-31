@@ -33,6 +33,30 @@ def _headers(key, content_type=None, upsert=False):
     return h
 
 
+def upload_file(file_storage, folder='videos', default_content_type='application/octet-stream'):
+    """Variante générique pour tout type de fichier (vidéo, doc, etc.).
+    Retourne l'URL publique. Lève RuntimeError en cas d'échec."""
+    base, key, bucket = _cfg()
+    if not (base and key):
+        raise RuntimeError("Supabase Storage non configuré (SUPABASE_URL / SUPABASE_SERVICE_KEY manquants).")
+
+    safe = secure_filename(file_storage.filename or 'file')
+    ext = safe.rsplit('.', 1)[1].lower() if '.' in safe else ''
+    name = f"{uuid.uuid4().hex}.{ext}" if ext else uuid.uuid4().hex
+    path = f"{folder}/{name}"
+
+    data = file_storage.read()
+    content_type = file_storage.mimetype or default_content_type
+    url = f"{base}/storage/v1/object/{bucket}/{path}"
+    req = urllib.request.Request(url, data=data, method='POST',
+                                 headers=_headers(key, content_type, upsert=True))
+    try:
+        urllib.request.urlopen(req, timeout=60)
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"Upload Supabase échoué ({e.code}): {e.read()[:200]}")
+    return f"{base}/storage/v1/object/public/{bucket}/{path}"
+
+
 def upload_photo(file_storage, folder='chantiers'):
     """Envoie un fichier vers Supabase Storage. Retourne l'URL publique."""
     base, key, bucket = _cfg()
