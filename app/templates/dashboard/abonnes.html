@@ -2,7 +2,7 @@
 {% block title %}Gestion des Abonnés - GESTBTP{% endblock %}
 {% block content %}
 <h1 class="page-title">Gestion des Abonnés SaaS</h1>
-<p class="page-subtitle">Suivi des revenus et statuts des clients</p>
+<p class="page-subtitle">Entreprises abonnées : revenus, forfaits et statuts</p>
 
 <div class="stats-grid">
   <div class="stat-card">
@@ -75,8 +75,10 @@
 <table class="data">
   <thead>
     <tr>
-      <th>Client</th>
-      <th>Contact</th>
+      <th>Entreprise</th>
+      <th>Propriétaire</th>
+      <th>Membres</th>
+      <th>Chantiers</th>
       <th>Forfait</th>
       <th>Souscription</th>
       <th>Statut</th>
@@ -84,25 +86,27 @@
     </tr>
   </thead>
   <tbody>
-    {% for client in clients %}
+    {% for c in comptes %}
     <tr>
-      <td><strong>{{ client.nom }}</strong></td>
-      <td>{{ client.email }}<br><small style="color:var(--text-muted)">{{ client.telephone or '' }}</small></td>
-      <td><span class="badge badge-dark" style="background:#111;color:#fff">{{ client.plan.value|capitalize }}</span></td>
-      <td>{{ client.date_souscription.strftime('%d/%m/%Y') if client.date_souscription else '—' }}</td>
+      <td><strong>{{ c.nom }}</strong></td>
+      <td>{{ c.owner.nom if c.owner else '—' }}<br><small style="color:var(--text-muted)">{{ c.owner.email if c.owner else '' }}</small></td>
+      <td>{{ c.nb_membres }}</td>
+      <td>{{ c.nb_chantiers }}</td>
+      <td><span class="badge badge-dark" style="background:#111;color:#fff">{{ c.plan.value|capitalize }}</span></td>
+      <td>{{ c.date_souscription.strftime('%d/%m/%Y') if c.date_souscription else '—' }}</td>
       <td>
-        {% if client.statut_abo.value == 'actif' %}
+        {% if c.statut_abo.value == 'actif' %}
           <span class="badge badge-success" style="background:#16A34A;color:#fff">Actif</span>
-        {% elif client.statut_abo.value == 'suspendu' %}
+        {% elif c.statut_abo.value == 'suspendu' %}
           <span class="badge badge-warning" style="background:#F59E0B;color:#fff">Suspendu</span>
         {% else %}
           <span class="badge badge-danger" style="background:#DC2626;color:#fff">Annulé</span>
         {% endif %}
       </td>
       <td>
-        <form method="post" action="{{ url_for('dashboard.toggle_status', id=client.id) }}" style="display:inline">
+        <form method="post" action="{{ url_for('dashboard.toggle_status', id=c.id) }}" style="display:inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          {% if client.statut_abo.value == 'actif' %}
+          {% if c.statut_abo.value == 'actif' %}
             <button type="submit" class="btn btn-danger btn-sm" data-confirm="Suspendre cet abonnement ?">
               <i class="fas fa-pause-circle"></i> Suspendre
             </button>
@@ -116,7 +120,7 @@
     </tr>
     {% else %}
     <tr>
-      <td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">Aucun client trouvé.</td>
+      <td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">Aucune entreprise abonnée.</td>
     </tr>
     {% endfor %}
   </tbody>

@@ -73,22 +73,28 @@ def webhook():
         current_app.logger.warning(f"Webhook GenuisPay : client introuvable ({email}).")
         return jsonify(ok=False, error='customer not found'), 404
 
-    # 4) Mise à jour de l'abonnement
+    # 4) Mise à jour de l'abonnement AU NIVEAU DE L'ENTREPRISE (compte)
+    from app.services.compte_service import get_or_create_compte
+    compte = get_or_create_compte(user)
+
     nouveau_plan = _map_plan(data.get('plan') or data.get('plan_code'))
     if nouveau_plan:
-        user.plan = nouveau_plan
+        compte.plan = nouveau_plan
+        user.plan = nouveau_plan  # on garde le champ user synchronisé (compat.)
+    compte.statut_abo = StatutAboEnum.ACTIF
     user.statut_abo = StatutAboEnum.ACTIF
-    user.date_souscription = datetime.utcnow()
+    compte.date_souscription = datetime.utcnow()
 
-    # Cumul du revenu généré
+    # Cumul du revenu généré (sur l'entreprise)
     montant = data.get('amount') or data.get('montant') or 0
     try:
-        user.revenu_genere = (user.revenu_genere or 0) + Decimal(str(montant))
+        compte.revenu_genere = (compte.revenu_genere or 0) + Decimal(str(montant))
     except (InvalidOperation, TypeError):
         pass
 
     db.session.commit()
     current_app.logger.info(
-        f"Webhook GenuisPay : {user.email} -> plan={user.plan.value}, +{montant}")
+        f"Webhook GenuisPay : {user.email} (entreprise {compte.nom}) "
+        f"-> plan={compte.plan.value}, +{montant}")
 
-    return jsonify(ok=True, user=user.email, plan=user.plan.value), 200
+    return jsonify(ok=True, user=user.email, compte=compte.nom, plan=compte.plan.value), 200

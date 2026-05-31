@@ -47,7 +47,11 @@ class User(UserMixin, db.Model):
     reset_token = db.Column(db.String(255))
     reset_expires = db.Column(db.DateTime)
 
-    # Champs d'abonnement SaaS
+    # Rattachement à une entreprise (compte/tenant qui porte l'abonnement)
+    compte_id = db.Column(db.Integer, db.ForeignKey('comptes.id'))
+
+    # Champs d'abonnement SaaS — CONSERVÉS pour compatibilité / repli.
+    # La source de vérité de l'abonnement est désormais le Compte (entreprise).
     plan = db.Column(
         db.Enum(PlanEnum, name='planenum', values_callable=enum_values),
         default=PlanEnum.GRATUIT)

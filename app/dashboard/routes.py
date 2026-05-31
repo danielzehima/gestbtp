@@ -6,6 +6,7 @@ from app.models.chantier import Chantier, StatutChantier
 from app.models.rapport import Rapport
 from app.models.tache import Tache, StatutTache
 from app.models.user import User, RoleEnum, PlanEnum, StatutAboEnum
+from app.models.compte import Compte
 from app.auth.decorators import role_required
 from app.extensions import db
 
@@ -50,31 +51,28 @@ def index():
 @login_required
 @role_required('admin')
 def abonnes():
+    """Liste des ENTREPRISES abonnées (comptes/tenants)."""
     q = request.args.get('q', '')
     plan_filter = request.args.get('plan', '')
     statut_filter = request.args.get('statut', '')
 
-    # L'admin voit TOUS les abonnés clients (y compris les Gratuits)
-    query = User.query.filter_by(role=RoleEnum.CLIENT)
-
+    query = Compte.query
     if q:
-        like_str = f"%{q}%"
-        query = query.filter((User.nom.ilike(like_str)) | (User.email.ilike(like_str)))
+        query = query.filter(Compte.nom.ilike(f"%{q}%"))
     if plan_filter:
         query = query.filter_by(plan=PlanEnum(plan_filter))
     if statut_filter:
         query = query.filter_by(statut_abo=StatutAboEnum(statut_filter))
 
-    clients = query.order_by(User.date_souscription.desc().nullslast()).all()
+    comptes = query.order_by(Compte.date_souscription.desc().nullslast()).all()
 
-    total_revenu = db.session.query(func.sum(User.revenu_genere)) \
-        .filter_by(role=RoleEnum.CLIENT).scalar() or 0
+    total_revenu = db.session.query(func.sum(Compte.revenu_genere)).scalar() or 0
 
     def count_plan(p):
-        return User.query.filter_by(role=RoleEnum.CLIENT, plan=p).count()
+        return Compte.query.filter_by(plan=p).count()
 
     stats = {
-        'total_clients': User.query.filter_by(role=RoleEnum.CLIENT).count(),
+        'total_comptes': Compte.query.count(),
         'gratuit': count_plan(PlanEnum.GRATUIT),
         'starter': count_plan(PlanEnum.STARTER),
         'pro': count_plan(PlanEnum.PRO),
@@ -83,7 +81,7 @@ def abonnes():
     }
 
     return render_template('dashboard/abonnes.html',
-                           clients=clients,
+                           comptes=comptes,
                            stats=stats,
                            q=q,
                            plan_filter=plan_filter,
@@ -94,12 +92,12 @@ def abonnes():
 @login_required
 @role_required('admin')
 def toggle_status(id):
-    client = User.query.get_or_404(id)
-    if client.statut_abo == StatutAboEnum.ACTIF:
-        client.statut_abo = StatutAboEnum.SUSPENDU
-        flash(f"L'abonnement de {client.nom} a été suspendu.", 'warning')
+    compte = Compte.query.get_or_404(id)
+    if compte.statut_abo == StatutAboEnum.ACTIF:
+        compte.statut_abo = StatutAboEnum.SUSPENDU
+        flash(f"L'abonnement de {compte.nom} a été suspendu.", 'warning')
     else:
-        client.statut_abo = StatutAboEnum.ACTIF
-        flash(f"L'abonnement de {client.nom} a été réactivé.", 'success')
+        compte.statut_abo = StatutAboEnum.ACTIF
+        flash(f"L'abonnement de {compte.nom} a été réactivé.", 'success')
     db.session.commit()
     return redirect(url_for('dashboard.abonnes'))

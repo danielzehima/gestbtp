@@ -5,7 +5,7 @@ from app.models.chantier import Chantier, StatutChantier
 from app.models.user import User, RoleEnum
 from app.chantiers.forms import ChantierForm
 from app.auth.decorators import role_required
-from app.utils.plans import can_create_chantier, chantiers_restants
+from app.utils.plans import can_create_chantier, chantiers_restants, get_compte
 
 chantiers_bp = Blueprint('chantiers', __name__)
 
@@ -52,7 +52,11 @@ def nouveau():
         if Chantier.query.filter_by(reference=form.reference.data).first():
             flash("Cette référence existe déjà.", 'danger')
         else:
+            # Rattachement du chantier à l'entreprise du créateur
+            from app.services.compte_service import get_or_create_compte
+            compte = get_or_create_compte(current_user) if not current_user.is_admin else get_compte(current_user)
             ch = Chantier(
+                compte_id=compte.id if compte else None,
                 nom=form.nom.data, reference=form.reference.data,
                 adresse=form.adresse.data,
                 client_id=form.client_id.data or None,

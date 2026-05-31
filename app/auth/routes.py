@@ -39,6 +39,9 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+        # Création de l'entreprise (compte/tenant) dont l'utilisateur est propriétaire
+        from app.services.compte_service import get_or_create_compte
+        get_or_create_compte(user)
         flash("Compte créé. Vous pouvez vous connecter.", 'success')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)

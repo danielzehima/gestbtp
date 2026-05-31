@@ -38,7 +38,7 @@ def create_app(config_name='development'):
             pass
 
     # Import des modèles (pour Alembic / create_all)
-    from app.models import user, chantier, rapport, tache, photo, notification  # noqa
+    from app.models import user, compte, chantier, rapport, tache, photo, notification  # noqa
 
     @login_manager.user_loader
     def load_user(user_id):

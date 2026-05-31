@@ -15,6 +15,7 @@ class Chantier(db.Model):
     __tablename__ = 'chantiers'
 
     id = db.Column(db.Integer, primary_key=True)
+    compte_id = db.Column(db.Integer, db.ForeignKey('comptes.id'))  # entreprise propriétaire
     nom = db.Column(db.String(200), nullable=False)
     reference = db.Column(db.String(50), unique=True, nullable=False, index=True)
     adresse = db.Column(db.String(255))

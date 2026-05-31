@@ -59,12 +59,23 @@ PLAN_LIMITS = {
 DEFAULT_PLAN = 'gratuit'
 
 
+def get_compte(user):
+    """Entreprise (Compte) à laquelle l'utilisateur est rattaché, ou None."""
+    return getattr(user, 'compte', None) if user else None
+
+
 def get_plan_key(user):
-    """Retourne la clé du forfait de l'utilisateur (ex: 'pro')."""
+    """Clé du forfait (ex: 'pro'). Source de vérité = le Compte de
+    l'entreprise ; repli sur le champ user.plan puis sur 'gratuit'."""
+    compte = get_compte(user)
     try:
-        return user.plan.value if user and user.plan else DEFAULT_PLAN
+        if compte and compte.plan:
+            return compte.plan.value
+        if user and user.plan:
+            return user.plan.value
     except Exception:
-        return DEFAULT_PLAN
+        pass
+    return DEFAULT_PLAN
 
 
 def plan_config(user):
@@ -82,14 +93,26 @@ def feature_enabled(user, feature):
 
 
 def _count_chantiers(user):
-    """Nombre de chantiers rattachés à l'utilisateur (comme responsable)."""
+    """Nombre de chantiers de l'ENTREPRISE (compte) de l'utilisateur.
+    Repli : chantiers dont l'utilisateur est responsable (s'il n'a pas de compte)."""
     from app.models.chantier import Chantier
+    compte = get_compte(user)
+    if compte:
+        return Chantier.query.filter_by(compte_id=compte.id).count()
     return Chantier.query.filter_by(responsable_id=user.id).count()
 
 
+def _count_membres(user):
+    """Nombre d'utilisateurs rattachés à l'entreprise (compte)."""
+    compte = get_compte(user)
+    if compte:
+        return compte.membres.count()
+    return 1
+
+
 def can_create_chantier(user):
-    """False si l'utilisateur a atteint la limite de chantiers de son forfait.
-    Les admins ne sont jamais limités."""
+    """False si l'ENTREPRISE a atteint sa limite de chantiers.
+    Les admins (opérateur SaaS) ne sont jamais limités."""
     from app.models.user import RoleEnum
     if user.role == RoleEnum.ADMIN:
         return True
@@ -99,8 +122,19 @@ def can_create_chantier(user):
     return _count_chantiers(user) < limite
 
 
+def can_add_user(user):
+    """False si l'ENTREPRISE a atteint sa limite d'utilisateurs."""
+    from app.models.user import RoleEnum
+    if user.role == RoleEnum.ADMIN:
+        return True
+    limite = plan_limit(user, 'max_utilisateurs')
+    if limite is None:
+        return True
+    return _count_membres(user) < limite
+
+
 def chantiers_restants(user):
-    """Nombre de chantiers encore créables (None = illimité)."""
+    """Nombre de chantiers encore créables pour l'entreprise (None = illimité)."""
     limite = plan_limit(user, 'max_chantiers')
     if limite is None:
         return None
