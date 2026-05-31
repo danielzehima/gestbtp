@@ -13,6 +13,12 @@
   </div>
   <div class="stat-card">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="label">Plan Gratuit</div><div class="value">{{ stats.gratuit }}</div></div>
+      <div class="icon"><i class="fas fa-gift"></i></div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div><div class="label">Plan Starter</div><div class="value">{{ stats.starter }}</div></div>
       <div class="icon"><i class="fas fa-seedling"></i></div>
     </div>
@@ -40,6 +46,7 @@
     <!-- 2. Forfaits -->
     <select name="plan" class="form-select" style="width:180px; flex:0 0 auto;">
       <option value="">Tous les forfaits</option>
+      <option value="gratuit" {% if plan_filter == 'gratuit' %}selected{% endif %}>Gratuit</option>
       <option value="starter" {% if plan_filter == 'starter' %}selected{% endif %}>Starter</option>
       <option value="pro" {% if plan_filter == 'pro' %}selected{% endif %}>Pro</option>
       <option value="entreprise" {% if plan_filter == 'entreprise' %}selected{% endif %}>Entreprise</option>

@@ -4,12 +4,14 @@ from app.models.rapport import Rapport
 from app.models.chantier import Chantier
 from app.models.tache import Tache
 from app.pdf.generator import rapport_pdf, chantier_pdf, taches_pdf
+from app.utils.plans import require_feature
 
 pdf_bp = Blueprint('pdf', __name__)
 
 
 @pdf_bp.route('/rapport/<int:id>')
 @login_required
+@require_feature('export_pdf')
 def rapport(id):
     r = Rapport.query.get_or_404(id)
     buf = rapport_pdf(r)
@@ -19,6 +21,7 @@ def rapport(id):
 
 @pdf_bp.route('/chantier/<int:id>')
 @login_required
+@require_feature('export_pdf')
 def chantier(id):
     c = Chantier.query.get_or_404(id)
     buf = chantier_pdf(c)
@@ -28,6 +31,7 @@ def chantier(id):
 
 @pdf_bp.route('/chantier/<int:id>/taches')
 @login_required
+@require_feature('export_pdf')
 def taches(id):
     c = Chantier.query.get_or_404(id)
     ts = Tache.query.filter_by(chantier_id=id).all()

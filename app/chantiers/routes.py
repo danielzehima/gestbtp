@@ -5,6 +5,7 @@ from app.models.chantier import Chantier, StatutChantier
 from app.models.user import User, RoleEnum
 from app.chantiers.forms import ChantierForm
 from app.auth.decorators import role_required
+from app.utils.plans import can_create_chantier, chantiers_restants
 
 chantiers_bp = Blueprint('chantiers', __name__)
 
@@ -40,6 +41,11 @@ def liste():
 @login_required
 @role_required('admin', 'conducteur')
 def nouveau():
+    # Application de la limite du forfait
+    if not can_create_chantier(current_user):
+        flash("Vous avez atteint la limite de chantiers de votre forfait. "
+              "Passez à un forfait supérieur pour en créer davantage.", 'warning')
+        return redirect(url_for('chantiers.liste'))
     form = ChantierForm()
     _populate_form_choices(form)
     if form.validate_on_submit():

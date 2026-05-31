@@ -19,6 +19,7 @@ class RoleEnum(str, Enum):
 
 
 class PlanEnum(str, Enum):
+    GRATUIT = 'gratuit'
     STARTER = 'starter'
     PRO = 'pro'
     ENTREPRISE = 'entreprise'
@@ -49,7 +50,7 @@ class User(UserMixin, db.Model):
     # Champs d'abonnement SaaS
     plan = db.Column(
         db.Enum(PlanEnum, name='planenum', values_callable=enum_values),
-        default=PlanEnum.STARTER)
+        default=PlanEnum.GRATUIT)
     statut_abo = db.Column(
         db.Enum(StatutAboEnum, name='statutaboenum', values_callable=enum_values),
         default=StatutAboEnum.ACTIF)

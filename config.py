@@ -48,6 +48,12 @@ class Config:
     SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
     SUPABASE_BUCKET = os.environ.get('SUPABASE_BUCKET', 'photos')
 
+    # ===== Agrégateur de paiement GenuisPay =====
+    GENIUSPAY_API_KEY = os.environ.get('GENIUSPAY_API_KEY', '')
+    GENIUSPAY_SECRET_KEY = os.environ.get('GENIUSPAY_SECRET_KEY', '')          # clé privée API
+    GENIUSPAY_WEBHOOK_SECRET = os.environ.get('GENIUSPAY_WEBHOOK_SECRET', '')  # secret de signature des webhooks
+    GENIUSPAY_BASE_URL = os.environ.get('GENIUSPAY_BASE_URL', 'https://api.geniuspay.com')
+
     COMPANY_NAME = "GESTBTP"
     COMPANY_COLOR_PRIMARY = "#FF6B00"
     COMPANY_COLOR_DARK = "#111111"

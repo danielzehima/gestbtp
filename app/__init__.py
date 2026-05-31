@@ -90,6 +90,11 @@ def create_app(config_name='development'):
     csrf.exempt(pages_bp)
     app.register_blueprint(pages_bp)
 
+    # Webhooks de paiement GenuisPay (API -> CSRF désactivé)
+    from app.payments.routes import payments_bp
+    csrf.exempt(payments_bp)
+    app.register_blueprint(payments_bp)
+
     # Handlers
     @app.errorhandler(404)
     def not_found(e):
