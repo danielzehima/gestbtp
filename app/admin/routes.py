@@ -2,12 +2,12 @@
 (vidéo de démonstration, etc.).
 """
 import re
-from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
+from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify
 from flask_login import login_required
 from app.extensions import db
 from app.models.setting import Setting
 from app.auth.decorators import role_required
-from app.services.storage_service import upload_file, is_configured
+from app.services.storage_service import upload_file, is_configured, create_signed_upload_url
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -83,3 +83,37 @@ def parametres():
     return render_template('admin/parametres.html',
                            current_video=current_video,
                            is_iframe=is_iframe_url(current_video))
+
+
+@admin_bp.route('/video/sign-upload', methods=['POST'])
+@login_required
+@role_required('admin')
+def sign_upload():
+    """Renvoie une URL d'upload signée pour envoyer la vidéo DIRECTEMENT à
+    Supabase depuis le navigateur (contourne la limite de taille de Vercel)."""
+    if not is_configured():
+        return jsonify(ok=False, error="Supabase Storage non configuré"), 400
+    data = request.get_json(silent=True) or {}
+    filename = data.get('filename', 'video.mp4')
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    if ext not in VIDEO_EXTS:
+        return jsonify(ok=False, error=f"Format non supporté : {ext}"), 400
+    try:
+        upload_url, public_url = create_signed_upload_url(folder='videos', filename=filename)
+        return jsonify(ok=True, upload_url=upload_url, public_url=public_url)
+    except Exception as e:
+        current_app.logger.error(f"sign-upload échec : {e}")
+        return jsonify(ok=False, error=str(e)), 500
+
+
+@admin_bp.route('/video/save', methods=['POST'])
+@login_required
+@role_required('admin')
+def save_video():
+    """Enregistre l'URL publique de la vidéo après upload direct vers Supabase."""
+    data = request.get_json(silent=True) or {}
+    public_url = (data.get('public_url') or '').strip()
+    if not public_url:
+        return jsonify(ok=False, error="URL manquante"), 400
+    Setting.set('demo_video_url', public_url)
+    return jsonify(ok=True)

@@ -57,6 +57,33 @@ def upload_file(file_storage, folder='videos', default_content_type='application
     return f"{base}/storage/v1/object/public/{bucket}/{path}"
 
 
+def create_signed_upload_url(folder='videos', filename='file'):
+    """Crée une URL d'upload SIGNÉE pour que le navigateur envoie le fichier
+    DIRECTEMENT à Supabase (sans passer par le serveur, donc sans la limite
+    de taille de l'hébergeur). Retourne (upload_url, public_url)."""
+    import json as _json
+    base, key, bucket = _cfg()
+    if not (base and key):
+        raise RuntimeError("Supabase Storage non configuré.")
+    safe = secure_filename(filename or 'file')
+    ext = safe.rsplit('.', 1)[1].lower() if '.' in safe else 'mp4'
+    path = f"{folder}/{uuid.uuid4().hex}.{ext}"
+
+    url = f"{base}/storage/v1/object/upload/sign/{bucket}/{path}"
+    req = urllib.request.Request(url, data=b'{}', method='POST',
+                                 headers=_headers(key, 'application/json'))
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            body = _json.loads(resp.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"Signature upload Supabase échouée ({e.code}): {e.read()[:200]}")
+
+    signed_path = body.get('url')  # ex: /object/upload/sign/photos/videos/xxx.mp4?token=...
+    upload_url = f"{base}/storage/v1{signed_path}"
+    public_url = f"{base}/storage/v1/object/public/{bucket}/{path}"
+    return upload_url, public_url
+
+
 def upload_photo(file_storage, folder='chantiers'):
     """Envoie un fichier vers Supabase Storage. Retourne l'URL publique."""
     base, key, bucket = _cfg()

@@ -45,21 +45,84 @@
       </form>
     </div>
 
-    <!-- Option 2 : Upload d'un fichier vidéo -->
+    <!-- Option 2 : Upload d'un fichier vidéo (direct vers Supabase) -->
     <div class="card">
       <div class="card-header"><h2 style="font-size:16px;margin:0">Option 2 — Uploader un fichier</h2></div>
-      <form method="post" enctype="multipart/form-data">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group">
-          <label for="video_file">Fichier vidéo (mp4, webm, mov…)</label>
-          <input type="file" id="video_file" name="video_file" class="form-control" accept="video/*">
+      <div class="form-group">
+        <label for="video_file">Fichier vidéo (mp4, webm, mov…)</label>
+        <input type="file" id="video_file" class="form-control" accept="video/*">
+      </div>
+      <button type="button" id="uploadBtn" class="btn btn-primary"><i class="fas fa-upload"></i> Uploader la vidéo</button>
+      <div id="uploadProgress" style="display:none;margin-top:12px">
+        <div style="height:10px;background:#eee;border-radius:5px;overflow:hidden">
+          <div id="progressBar" style="height:100%;background:var(--primary);width:0%"></div>
         </div>
-        <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Uploader la vidéo</button>
-        <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
-          La vidéo est stockée sur Supabase Storage. Conseil : compressez-la pour un chargement rapide.
-        </p>
-      </form>
+        <div id="progressText" style="font-size:12px;color:var(--text-muted);margin-top:6px">0%</div>
+      </div>
+      <div id="uploadMsg" style="margin-top:10px"></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
+        La vidéo est envoyée directement vers Supabase Storage (sans limite de l'hébergeur).
+        Conseil : compressez-la pour un chargement rapide chez les visiteurs.
+      </p>
     </div>
+
+    <script>
+    const CSRF = "{{ csrf_token() }}";
+    const btn = document.getElementById('uploadBtn');
+    const fileInput = document.getElementById('video_file');
+    const prog = document.getElementById('uploadProgress');
+    const bar = document.getElementById('progressBar');
+    const ptext = document.getElementById('progressText');
+    const msg = document.getElementById('uploadMsg');
+
+    btn.addEventListener('click', async () => {
+      const f = fileInput.files[0];
+      if (!f) { msg.innerHTML = '<div class="flash-msg flash-danger">Choisissez un fichier vidéo.</div>'; return; }
+      btn.disabled = true; msg.innerHTML = '';
+      try {
+        // 1) Demander une URL d'upload signée
+        const signResp = await fetch("{{ url_for('admin.sign_upload') }}", {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-CSRFToken':CSRF},
+          body: JSON.stringify({filename: f.name})
+        });
+        const sign = await signResp.json();
+        if (!sign.ok) throw new Error(sign.error || 'Signature échouée');
+
+        // 2) Upload direct vers Supabase (avec progression)
+        prog.style.display = 'block';
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', sign.upload_url, true);
+          xhr.setRequestHeader('Content-Type', f.type || 'video/mp4');
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round(e.loaded / e.total * 100);
+              bar.style.width = pct + '%'; ptext.textContent = pct + '%';
+            }
+          };
+          xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error('Upload Supabase: ' + xhr.status));
+          xhr.onerror = () => reject(new Error('Erreur réseau pendant l\'upload'));
+          xhr.send(f);
+        });
+
+        // 3) Enregistrer l'URL publique
+        const saveResp = await fetch("{{ url_for('admin.save_video') }}", {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-CSRFToken':CSRF},
+          body: JSON.stringify({public_url: sign.public_url})
+        });
+        const save = await saveResp.json();
+        if (!save.ok) throw new Error(save.error || 'Enregistrement échoué');
+
+        msg.innerHTML = '<div class="flash-msg flash-success">Vidéo uploadée avec succès !</div>';
+        setTimeout(() => location.reload(), 1000);
+      } catch (err) {
+        msg.innerHTML = '<div class="flash-msg flash-danger">Échec : ' + err.message + '</div>';
+        btn.disabled = false;
+      }
+    });
+    </script>
   </div>
 </div>
 {% endblock %}
