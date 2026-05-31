@@ -22,3 +22,5 @@ migrations/versions/__pycache__/
 
 # Logs de debug temporaires
 vlogs.txt
+
+*.orig
