@@ -52,13 +52,15 @@ def payer(plan):
         flash("Forfait invalide.", 'danger')
         return redirect(url_for('billing.index'))
 
-    payment_url, paiement = initiate_payment(compte, plan, current_user.email)
+    payment_url, paiement, error = initiate_payment(compte, plan, current_user.email)
     if payment_url:
-        return redirect(payment_url)  # redirection vers la page de paiement GenuisPay
+        return redirect(payment_url)  # redirection vers la page de paiement GeniusPay
 
-    # GenuisPay pas encore configuré : on informe l'utilisateur
-    flash("Le paiement en ligne n'est pas encore activé (clés GenuisPay manquantes). "
-          f"Votre demande de passage au forfait {plan.capitalize()} a été enregistrée.", 'info')
+    if error:
+        flash(f"Le paiement n'a pas pu être initié. {error}", 'danger')
+    else:
+        flash("Le paiement en ligne n'est pas encore activé (clés GeniusPay manquantes). "
+              f"Votre demande de passage au forfait {plan.capitalize()} a été enregistrée.", 'info')
     return redirect(url_for('billing.index'))
 
 

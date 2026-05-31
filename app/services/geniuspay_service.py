@@ -23,10 +23,10 @@ def _new_reference():
 
 
 def initiate_payment(compte, plan_key, customer_email):
-    """Crée une transaction GenuisPay pour faire passer l'entreprise à `plan_key`.
+    """Crée une transaction GeniusPay pour faire passer l'entreprise à `plan_key`.
 
-    Retourne (payment_url, paiement). `payment_url` peut être None si GenuisPay
-    n'est pas encore configuré : on enregistre alors juste un paiement en attente.
+    Retourne (payment_url, paiement, error). `payment_url` None + error None =
+    non configuré (paiement en attente). error renseigné = échec avec détail.
     """
     infos = PLAN_LIMITS.get(plan_key, {})
     montant = infos.get('prix') or 0
@@ -44,7 +44,7 @@ def initiate_payment(compte, plan_key, customer_email):
     base = current_app.config.get('GENIUSPAY_BASE_URL', '').rstrip('/')
     if not api_key or not api_secret or not base:
         current_app.logger.info("GeniusPay non configuré : paiement en attente créé sans redirection.")
-        return None, paiement
+        return None, paiement, None
 
     # Payload GeniusPay : montant entier (FCFA), client, métadonnées.
     # En omettant payment_method, l'API renvoie une checkout_url.
@@ -73,15 +73,16 @@ def initiate_payment(compte, plan_key, customer_email):
         with urllib.request.urlopen(req, timeout=20) as resp:
             body = json.loads(resp.read().decode('utf-8'))
     except urllib.error.HTTPError as e:
-        current_app.logger.error(f"GeniusPay init échec HTTP ({e.code}): {e.read()[:300]}")
+        detail = e.read().decode('utf-8', 'replace')[:400]
+        current_app.logger.error(f"GeniusPay init échec HTTP ({e.code}): {detail}")
         paiement.statut = StatutPaiement.ECHOUE
         db.session.commit()
-        return None, paiement
+        return None, paiement, f"GeniusPay a répondu {e.code} : {detail}"
     except Exception as e:
         current_app.logger.error(f"GeniusPay init erreur: {e!r}")
         paiement.statut = StatutPaiement.ECHOUE
         db.session.commit()
-        return None, paiement
+        return None, paiement, f"Connexion à GeniusPay impossible : {e}"
 
     data = body.get('data', body) or {}
     payment_url = data.get('checkout_url') or body.get('checkout_url')
@@ -92,4 +93,7 @@ def initiate_payment(compte, plan_key, customer_email):
         paiement.reference = str(mtx)
         db.session.commit()
 
-    return payment_url, paiement
+    if not payment_url:
+        return None, paiement, f"Réponse GeniusPay sans checkout_url : {str(body)[:300]}"
+
+    return payment_url, paiement, None
