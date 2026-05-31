@@ -8,16 +8,24 @@
   {% endif %}
 </div>
 
-<form method="get" class="card" style="display:flex;gap:12px;align-items:center">
-  <input name="q" value="{{ q }}" placeholder="Rechercher nom ou référence..." style="flex:1">
-  <select name="statut">
-    <option value="">— Tous statuts —</option>
-    <option value="preparation" {% if statut=='preparation' %}selected{% endif %}>Préparation</option>
-    <option value="en_cours" {% if statut=='en_cours' %}selected{% endif %}>En cours</option>
-    <option value="suspendu" {% if statut=='suspendu' %}selected{% endif %}>Suspendu</option>
-    <option value="termine" {% if statut=='termine' %}selected{% endif %}>Terminé</option>
-  </select>
-  <button class="btn btn-dark">Filtrer</button>
+<form method="get" class="card p-3 mb-4">
+  <div class="d-flex flex-nowrap align-items-center gap-2 overflow-auto">
+    <input type="text" name="q" value="{{ q }}" placeholder="Rechercher nom ou référence..."
+           class="form-control flex-grow-1" style="min-width:220px;">
+    <select name="statut" class="form-select" style="width:180px; flex:0 0 auto;">
+      <option value="">Tous les statuts</option>
+      <option value="preparation" {% if statut=='preparation' %}selected{% endif %}>Préparation</option>
+      <option value="en_cours" {% if statut=='en_cours' %}selected{% endif %}>En cours</option>
+      <option value="suspendu" {% if statut=='suspendu' %}selected{% endif %}>Suspendu</option>
+      <option value="termine" {% if statut=='termine' %}selected{% endif %}>Terminé</option>
+    </select>
+    <button type="submit" class="btn btn-dark text-nowrap" style="flex:0 0 auto;">
+      <i class="fas fa-filter"></i> Filtrer
+    </button>
+    <a href="{{ url_for('chantiers.liste') }}" class="btn btn-outline-secondary text-nowrap" style="flex:0 0 auto;">
+      <i class="fas fa-rotate-left"></i> Reset
+    </a>
+  </div>
 </form>
 
 <table class="data">

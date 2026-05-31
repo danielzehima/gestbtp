@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Photos - GESTBTP{% endblock %}
+{% block content %}
+<h1 class="page-title">Photos des chantiers</h1>
+<p class="page-subtitle">Accédez à la galerie photo de chaque chantier</p>
+
+<div class="row g-3">
+  {% for item in data %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card" style="height:100%;display:flex;flex-direction:column">
+      <div class="card-header">
+        <h2 style="font-size:16px;margin:0">{{ item.chantier.nom }}</h2>
+        <span class="badge badge-{{ item.chantier.statut.value }}">{{ item.count }} photo(s)</span>
+      </div>
+
+      {% if item.apercu %}
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-bottom:12px">
+        {% for p in item.apercu %}
+        <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:#eee">
+          <img src="{{ url_for('static', filename=p.chemin_fichier) }}"
+               style="width:100%;height:100%;object-fit:cover" alt="">
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="padding:20px;text-align:center;color:var(--text-muted);background:var(--bg-soft);border-radius:8px;margin-bottom:12px">
+        <i class="fas fa-image" style="font-size:24px;opacity:.4"></i>
+        <div style="margin-top:6px;font-size:13px">Aucune photo</div>
+      </div>
+      {% endif %}
+
+      <a href="{{ url_for('photos.galerie', chantier_id=item.chantier.id) }}"
+         class="btn btn-primary btn-sm" style="margin-top:auto;justify-content:center">
+        <i class="fas fa-images"></i> Voir la galerie
+      </a>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="card" style="text-align:center;padding:40px;color:var(--text-muted)">
+      Aucun chantier pour le moment.
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

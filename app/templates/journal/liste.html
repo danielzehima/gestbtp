@@ -7,10 +7,17 @@
   {% endif %}
 </div>
 
-<form method="get" class="card" style="display:flex;gap:12px;align-items:center">
-  <input type="date" name="date" value="{{ date_filter or '' }}">
-  <button class="btn btn-dark">Filtrer</button>
-  <a href="{{ url_for('journal.liste') }}" class="btn btn-outline">Réinitialiser</a>
+<form method="get" class="card p-3 mb-4">
+  <div class="d-flex flex-nowrap align-items-center gap-2 overflow-auto">
+    <input type="date" name="date" value="{{ date_filter or '' }}"
+           class="form-control" style="width:200px; flex:0 0 auto;">
+    <button type="submit" class="btn btn-dark text-nowrap" style="flex:0 0 auto;">
+      <i class="fas fa-filter"></i> Filtrer
+    </button>
+    <a href="{{ url_for('journal.liste') }}" class="btn btn-outline-secondary text-nowrap" style="flex:0 0 auto;">
+      <i class="fas fa-rotate-left"></i> Reset
+    </a>
+  </div>
 </form>
 
 <table class="data">

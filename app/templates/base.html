@@ -20,7 +20,7 @@
       <a href="{{ url_for('chantiers.liste') }}" class="{{ 'active' if 'chantiers' in (request.endpoint or '') }}"><i class="fas fa-hard-hat"></i> Chantiers</a>
       <a href="{{ url_for('journal.liste') }}" class="{{ 'active' if 'journal' in (request.endpoint or '') }}"><i class="fas fa-clipboard"></i> Journal</a>
       <a href="{{ url_for('taches.liste') }}" class="{{ 'active' if 'taches' in (request.endpoint or '') }}"><i class="fas fa-check-square"></i> Tâches</a>
-      <a href="{{ url_for('chantiers.liste') }}"><i class="fas fa-images"></i> Photos</a>
+      <a href="{{ url_for('photos.index') }}" class="{{ 'active' if 'photos' in (request.endpoint or '') }}"><i class="fas fa-images"></i> Photos</a>
       
       {% if current_user.is_admin %}
       <hr style="border-color: #2a2a2a; margin: 10px 24px;">

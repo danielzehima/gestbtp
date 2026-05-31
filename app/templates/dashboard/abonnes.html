@@ -31,25 +31,38 @@
   </div>
 </div>
 
-<form method="get" class="card" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-  <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par nom ou email..." class="form-control" style="flex:2; min-width: 200px;">
-  
-  <select name="plan" class="form-control" style="flex:1; min-width: 150px;">
-    <option value="">— Tous les forfaits —</option>
-    <option value="starter" {% if plan_filter == 'starter' %}selected{% endif %}>Starter</option>
-    <option value="pro" {% if plan_filter == 'pro' %}selected{% endif %}>Pro</option>
-    <option value="entreprise" {% if plan_filter == 'entreprise' %}selected{% endif %}>Entreprise</option>
-  </select>
+<form method="get" class="card p-3 mb-4">
+  <div class="d-flex flex-nowrap align-items-center gap-2 overflow-auto">
+    <!-- 1. Recherche -->
+    <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par nom ou email..."
+           class="form-control flex-grow-1" style="min-width:220px;">
 
-  <select name="statut" class="form-control" style="flex:1; min-width: 150px;">
-    <option value="">— Tous les statuts —</option>
-    <option value="actif" {% if statut_filter == 'actif' %}selected{% endif %}>Actifs</option>
-    <option value="suspendu" {% if statut_filter == 'suspendu' %}selected{% endif %}>Suspendus</option>
-    <option value="annule" {% if statut_filter == 'annule' %}selected{% endif %}>Annulés</option>
-  </select>
+    <!-- 2. Forfaits -->
+    <select name="plan" class="form-select" style="width:180px; flex:0 0 auto;">
+      <option value="">Tous les forfaits</option>
+      <option value="starter" {% if plan_filter == 'starter' %}selected{% endif %}>Starter</option>
+      <option value="pro" {% if plan_filter == 'pro' %}selected{% endif %}>Pro</option>
+      <option value="entreprise" {% if plan_filter == 'entreprise' %}selected{% endif %}>Entreprise</option>
+    </select>
 
-  <button type="submit" class="btn btn-dark">Filtrer</button>
-  <a href="{{ url_for('dashboard.abonnes') }}" class="btn btn-outline">Reset</a>
+    <!-- 3. Statuts -->
+    <select name="statut" class="form-select" style="width:180px; flex:0 0 auto;">
+      <option value="">Tous les statuts</option>
+      <option value="actif" {% if statut_filter == 'actif' %}selected{% endif %}>Actifs</option>
+      <option value="suspendu" {% if statut_filter == 'suspendu' %}selected{% endif %}>Suspendus</option>
+      <option value="annule" {% if statut_filter == 'annule' %}selected{% endif %}>Annulés</option>
+    </select>
+
+    <!-- 4. Bouton Filtrer -->
+    <button type="submit" class="btn btn-dark text-nowrap" style="flex:0 0 auto;">
+      <i class="fas fa-filter"></i> Filtrer
+    </button>
+
+    <!-- 5. Bouton Reset -->
+    <a href="{{ url_for('dashboard.abonnes') }}" class="btn btn-outline-secondary text-nowrap" style="flex:0 0 auto;">
+      <i class="fas fa-rotate-left"></i> Reset
+    </a>
+  </div>
 </form>
 
 <table class="data">

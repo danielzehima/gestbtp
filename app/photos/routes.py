@@ -10,6 +10,23 @@ from app.auth.decorators import role_required
 photos_bp = Blueprint('photos', __name__)
 
 
+@photos_bp.route('/')
+@login_required
+def index():
+    """Page Photos globale : liste des chantiers avec leur nombre de photos
+    et un aperçu, pour accéder à la galerie de chacun."""
+    from app.models.user import RoleEnum
+    query = Chantier.query
+    if current_user.role == RoleEnum.CLIENT:
+        query = query.filter_by(client_id=current_user.id)
+    chantiers = query.order_by(Chantier.date_creation.desc()).all()
+    data = []
+    for c in chantiers:
+        photos = Photo.query.filter_by(chantier_id=c.id).order_by(Photo.date_upload.desc()).all()
+        data.append({'chantier': c, 'count': len(photos), 'apercu': photos[:4]})
+    return render_template('photos/index.html', data=data)
+
+
 @photos_bp.route('/chantier/<int:chantier_id>')
 @login_required
 def galerie(chantier_id):
