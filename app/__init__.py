@@ -101,4 +101,10 @@ def create_app(config_name='development'):
         from flask import render_template
         return render_template('errors/403.html'), 403
 
+    @app.errorhandler(413)
+    def too_large(e):
+        from flask import redirect, request, flash
+        flash("Photo trop volumineuse (max 4 Mo). Réduisez sa taille et réessayez.", 'danger')
+        return redirect(request.referrer or '/'), 303
+
     return app

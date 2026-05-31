@@ -28,7 +28,9 @@ class Config:
     }
 
     UPLOAD_FOLDER = os.path.join(BASE_DIR, os.environ.get('UPLOAD_FOLDER', 'app/static/uploads'))
-    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
+    # Vercel limite le corps des requêtes serverless à ~4,5 Mo.
+    # On reste sous cette limite (les images sont compressées côté navigateur).
+    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 4 * 1024 * 1024))
     ALLOWED_PHOTO_EXTENSIONS = {'jpg', 'jpeg', 'png'}
     ALLOWED_DOC_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'}
 

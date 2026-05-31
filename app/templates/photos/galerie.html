@@ -3,7 +3,7 @@
 <h1 class="page-title">Photos — {{ chantier.nom }}</h1>
 {% if current_user.role.value in ['admin','conducteur'] %}
 <div class="card">
-  <form method="post" action="{{ url_for('photos.upload', chantier_id=chantier.id) }}" enctype="multipart/form-data">
+  <form method="post" action="{{ url_for('photos.upload', chantier_id=chantier.id) }}" enctype="multipart/form-data" data-photo-upload>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="file" name="photos" multiple accept="image/*">
     <input type="text" name="legende" placeholder="Légende">

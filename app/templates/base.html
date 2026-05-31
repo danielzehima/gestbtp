@@ -12,8 +12,8 @@
 {% if current_user.is_authenticated %}
 <div class="layout">
   <aside class="sidebar">
-    <div class="brand" style="text-align:center;padding:0 16px 20px">
-      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="GESTBTP" style="max-width:200px;background:#fff;padding:12px;border-radius:12px">
+    <div class="brand" style="text-align:center;padding:0 16px 14px">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="GESTBTP" style="max-width:120px;background:#fff;padding:8px;border-radius:10px">
     </div>
     <nav>
       <a href="{{ url_for('dashboard.index') }}" class="{{ 'active' if request.endpoint=='dashboard.index' }}"><i class="fas fa-th-large"></i> Tableau de bord</a>
@@ -53,6 +53,7 @@
   {% block auth %}{% endblock %}
 {% endif %}
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/photo-upload.js') }}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
