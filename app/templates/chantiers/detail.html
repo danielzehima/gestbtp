@@ -53,6 +53,51 @@
     <strong>Description</strong>
     <p>{{ chantier.description or '—' }}</p>
   </div>
+
+  {% if chantier.adresse %}
+  <!-- Widget météo (chargé en AJAX, ne ralentit pas la page) -->
+  <div class="card" id="meteoWidget">
+    <div class="card-header"><h2 style="font-size:16px;margin:0"><i class="fas fa-cloud-sun" style="color:var(--primary)"></i> Météo du chantier</h2></div>
+    <div id="meteoContent" style="padding:8px 0">
+      <div style="color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i> Chargement de la météo…</div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    fetch("{{ url_for('chantiers.meteo', id=chantier.id) }}")
+      .then(r => r.json())
+      .then(d => {
+        const box = document.getElementById('meteoContent');
+        if (!d.ok) {
+          box.innerHTML = '<div style="color:var(--text-muted)">Météo indisponible pour cette adresse.</div>';
+          return;
+        }
+        const m = d.meteo, a = m.actuel;
+        const jours = m.jours.map(j => `
+          <div style="text-align:center;flex:1;min-width:88px;padding:10px;background:var(--bg-soft);border-radius:10px">
+            <div style="font-size:12px;color:var(--text-muted)">${j.date}</div>
+            <div style="font-size:26px;margin:4px 0">${j.emoji}</div>
+            <div style="font-size:13px"><strong>${j.tmax}°</strong> / ${j.tmin}°</div>
+            <div style="font-size:11px;color:#3B82F6">💧 ${j.pluie}%</div>
+          </div>`).join('');
+        box.innerHTML = `
+          <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px">
+            <div style="font-size:54px;line-height:1">${a.emoji}</div>
+            <div>
+              <div style="font-size:34px;font-weight:800">${a.temp}°C</div>
+              <div style="color:var(--text-muted)">${a.libelle} · ${m.lieu}</div>
+              <div style="font-size:13px;color:var(--text-muted)">💨 ${a.vent} km/h · 🌧️ ${a.precip} mm</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">${jours}</div>`;
+      })
+      .catch(() => {
+        document.getElementById('meteoContent').innerHTML =
+          '<div style="color:var(--text-muted)">Météo indisponible.</div>';
+      });
+  })();
+  </script>
+  {% endif %}
 </div>
 
 <div id="tab-journal" class="tab-pane" style="display:none">

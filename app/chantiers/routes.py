@@ -107,6 +107,21 @@ def detail(id):
     return render_template('chantiers/detail.html', chantier=ch)
 
 
+@chantiers_bp.route('/<int:id>/meteo')
+@login_required
+def meteo(id):
+    """Météo du chantier (JSON, chargée en AJAX depuis la fiche)."""
+    from flask import jsonify
+    from app.services.meteo_service import get_weather
+    ch = _get_chantier_or_404(id)
+    if not ch.adresse:
+        return jsonify(ok=False, error='no_address')
+    data = get_weather(ch.adresse)
+    if not data:
+        return jsonify(ok=False, error='unavailable')
+    return jsonify(ok=True, meteo=data)
+
+
 @chantiers_bp.route('/<int:id>/modifier', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'conducteur')

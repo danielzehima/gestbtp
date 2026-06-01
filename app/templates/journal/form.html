@@ -8,7 +8,13 @@
       <div class="form-group">{{ form.chantier_id.label }} {{ form.chantier_id() }}</div>
       <div class="form-group">{{ form.date.label }} {{ form.date() }}</div>
     </div>
-    <div class="form-group">{{ form.meteo.label }} {{ form.meteo() }}</div>
+    <div class="form-group">
+      {{ form.meteo.label }} {{ form.meteo() }}
+      <button type="button" id="meteoAuto" class="btn btn-outline btn-sm" style="margin-top:6px">
+        <i class="fas fa-cloud-sun"></i> Remplir avec la météo du chantier
+      </button>
+      <small id="meteoHint" style="color:var(--text-muted);margin-left:8px"></small>
+    </div>
     <div class="form-group">{{ form.travaux_realises.label }} {{ form.travaux_realises() }}</div>
     <div class="form-group">{{ form.difficultes.label }} {{ form.difficultes() }}</div>
     <div class="form-group">{{ form.main_oeuvre.label }} {{ form.main_oeuvre() }}</div>
@@ -21,4 +27,32 @@
     {{ form.submit(class="btn btn-primary") }}
   </form>
 </div>
+
+<script>
+// Pré-remplissage de la météo à partir du chantier sélectionné
+document.getElementById('meteoAuto').addEventListener('click', async () => {
+  const chantierId = document.querySelector('[name="chantier_id"]').value;
+  const hint = document.getElementById('meteoHint');
+  if (!chantierId) { hint.textContent = "Choisissez d'abord un chantier."; return; }
+  hint.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Récupération…';
+  try {
+    const r = await fetch(`/chantiers/${chantierId}/meteo`);
+    const d = await r.json();
+    if (!d.ok) { hint.textContent = "Météo indisponible (vérifiez l'adresse du chantier)."; return; }
+    const a = d.meteo.actuel;
+    // On mappe le libellé météo vers une des options du select
+    const sel = document.querySelector('[name="meteo"]');
+    const lib = a.libelle.toLowerCase();
+    let choix = 'Ensoleillé';
+    if (lib.includes('orage')) choix = 'Orageux';
+    else if (lib.includes('neige')) choix = 'Neigeux';
+    else if (lib.includes('pluie') || lib.includes('averse') || lib.includes('bruine')) choix = 'Pluvieux';
+    else if (lib.includes('couvert') || lib.includes('nuageux')) choix = 'Nuageux';
+    for (const o of sel.options) { if (o.value === choix) { sel.value = choix; break; } }
+    hint.innerHTML = `✓ ${a.emoji} ${a.libelle}, ${a.temp}°C`;
+  } catch (e) {
+    hint.textContent = "Erreur de récupération météo.";
+  }
+});
+</script>
 {% endblock %}
