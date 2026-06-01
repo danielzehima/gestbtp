@@ -60,13 +60,22 @@
     <div class="card">
       <div class="card-header"><h2 style="font-size:16px;margin:0">Ajouter un membre</h2></div>
       {% if peut_ajouter %}
+      {# Erreurs de validation (ex: mot de passe trop court, email invalide) #}
+      {% if form.errors %}
+      <div class="flash flash-danger" style="font-size:13px">
+        {% for field, errs in form.errors.items() %}
+          {% for e in errs %}<div>{{ form[field].label.text }} : {{ e }}</div>{% endfor %}
+        {% endfor %}
+      </div>
+      {% endif %}
       <form method="post">
         {{ form.hidden_tag() }}
-        <div class="form-group">{{ form.nom.label }} {{ form.nom(class="form-control") }}</div>
-        <div class="form-group">{{ form.email.label }} {{ form.email(class="form-control") }}</div>
-        <div class="form-group">{{ form.telephone.label }} {{ form.telephone(class="form-control") }}</div>
+        <div class="form-group">{{ form.nom.label }} {{ form.nom(class="form-control", value=form.nom.data or '') }}</div>
+        <div class="form-group">{{ form.email.label }} {{ form.email(class="form-control", value=form.email.data or '') }}</div>
+        <div class="form-group">{{ form.telephone.label }} {{ form.telephone(class="form-control", value=form.telephone.data or '') }}</div>
         <div class="form-group">{{ form.role.label }} {{ form.role(class="form-select") }}</div>
-        <div class="form-group">{{ form.password.label }} {{ form.password(class="form-control") }}</div>
+        <div class="form-group">{{ form.password.label }} {{ form.password(class="form-control") }}
+          <small style="color:var(--text-muted)">8 caractères minimum</small></div>
         {{ form.submit(class="btn btn-primary", style="width:100%;justify-content:center") }}
       </form>
       {% else %}
