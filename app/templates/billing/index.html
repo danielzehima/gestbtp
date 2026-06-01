@@ -76,7 +76,7 @@
 <!-- Historique -->
 <h2 style="margin:28px 0 14px;font-size:20px">Historique de paiement</h2>
 <table class="data">
-  <thead><tr><th>Référence</th><th>Forfait</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead>
+  <thead><tr><th>Référence</th><th>Forfait</th><th>Montant</th><th>Statut</th><th>Date</th><th>Facture</th></tr></thead>
   <tbody>
     {% for p in paiements %}
     <tr>
@@ -89,9 +89,14 @@
         {% else %}<span class="badge badge-bloque">Échoué</span>{% endif %}
       </td>
       <td>{{ p.date_creation.strftime('%d/%m/%Y %H:%M') if p.date_creation else '—' }}</td>
+      <td>
+        {% if p.statut.value == 'reussi' %}
+        <a href="{{ url_for('billing.facture', paiement_id=p.id) }}" class="btn btn-outline btn-sm" title="Télécharger la facture"><i class="fas fa-file-pdf"></i></a>
+        {% else %}—{% endif %}
+      </td>
     </tr>
     {% else %}
-    <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">Aucun paiement pour le moment.</td></tr>
+    <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted)">Aucun paiement pour le moment.</td></tr>
     {% endfor %}
   </tbody>
 </table>

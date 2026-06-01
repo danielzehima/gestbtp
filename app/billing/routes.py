@@ -1,11 +1,11 @@
 """Espace abonnement de l'entreprise : forfait actuel, historique de
 paiement, et passage à un forfait supérieur via GenuisPay.
 """
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, send_file
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.user import RoleEnum
-from app.models.paiement import Paiement
+from app.models.paiement import Paiement, StatutPaiement
 from app.services.compte_service import get_or_create_compte
 from app.services.geniuspay_service import initiate_payment
 from app.utils.plans import PLAN_LIMITS, get_compte, acces_actif
@@ -126,3 +126,21 @@ def demarrer_essai():
     db.session.commit()
     flash("🎉 Essai gratuit de 14 jours activé !", 'success')
     return redirect(url_for('dashboard.index'))
+
+
+@billing_bp.route('/facture/<int:paiement_id>')
+@login_required
+def facture(paiement_id):
+    """Télécharge la facture PDF d'un paiement d'abonnement (réussi)."""
+    p = Paiement.query.get_or_404(paiement_id)
+    compte = get_or_create_compte(current_user)
+    # L'abonné ne peut télécharger que SES factures (admin = tout)
+    if current_user.role != RoleEnum.ADMIN and p.compte_id != compte.id:
+        abort(404)
+    if p.statut != StatutPaiement.REUSSI:
+        flash("La facture n'est disponible que pour un paiement réussi.", 'warning')
+        return redirect(url_for('billing.index'))
+    from app.billing.invoice_pdf import abonnement_invoice_pdf
+    buf = abonnement_invoice_pdf(p, p.compte or compte)
+    return send_file(buf, mimetype='application/pdf', as_attachment=True,
+                     download_name=f"facture-abonnement-{p.reference}.pdf")
