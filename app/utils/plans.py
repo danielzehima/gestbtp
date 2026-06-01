@@ -65,6 +65,12 @@ def get_compte(user):
     return getattr(user, 'compte', None) if user else None
 
 
+def current_compte_id(user):
+    """ID de l'entreprise de l'utilisateur (None si admin/sans compte)."""
+    c = get_compte(user)
+    return c.id if c else None
+
+
 def get_plan_key(user):
     """Clé du forfait (ex: 'pro'). Source de vérité = le Compte de
     l'entreprise ; repli sur le champ user.plan puis sur 'gratuit'."""

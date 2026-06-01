@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.tache import Tache, PrioriteTache, StatutTache
@@ -6,15 +6,40 @@ from app.models.chantier import Chantier
 from app.models.user import User
 from app.taches.forms import TacheForm
 from app.auth.decorators import role_required
-from app.utils.plans import abonnement_requis
+from app.utils.plans import abonnement_requis, current_compte_id
+from app.models.user import RoleEnum
 from app.services.notification_service import notify_user
 
 taches_bp = Blueprint('taches', __name__)
 
 
+def _compte_chantier_ids():
+    """IDs des chantiers de l'entreprise courante (None = admin → tous)."""
+    if current_user.role == RoleEnum.ADMIN:
+        return None
+    cid = current_compte_id(current_user)
+    return [c.id for c in Chantier.query.filter_by(compte_id=cid).all()]
+
+
 def _populate(form):
-    form.chantier_id.choices = [(c.id, f"{c.reference} - {c.nom}") for c in Chantier.query.all()]
-    form.responsable_id.choices = [(0, '— Aucun —')] + [(u.id, u.nom) for u in User.query.all()]
+    """Chantiers et responsables limités à l'entreprise courante."""
+    if current_user.role == RoleEnum.ADMIN:
+        chantiers = Chantier.query.all()
+        users = User.query.all()
+    else:
+        cid = current_compte_id(current_user)
+        chantiers = Chantier.query.filter_by(compte_id=cid).all()
+        users = User.query.filter_by(compte_id=cid).all()
+    form.chantier_id.choices = [(c.id, f"{c.reference} - {c.nom}") for c in chantiers]
+    form.responsable_id.choices = [(0, '— Aucun —')] + [(u.id, u.nom) for u in users]
+
+
+def _get_tache_or_404(id):
+    t = Tache.query.get_or_404(id)
+    ids = _compte_chantier_ids()
+    if ids is not None and t.chantier_id not in ids:
+        abort(404)
+    return t
 
 
 @taches_bp.route('/')
@@ -23,6 +48,9 @@ def _populate(form):
 def liste():
     statut = request.args.get('statut')
     query = Tache.query
+    ids = _compte_chantier_ids()
+    if ids is not None:
+        query = query.filter(Tache.chantier_id.in_(ids)) if ids else query.filter(db.false())
     if statut:
         query = query.filter_by(statut=StatutTache(statut))
     taches = query.order_by(Tache.date_limite.asc().nullslast()).all()
@@ -60,7 +88,7 @@ def nouveau():
 @login_required
 @role_required('admin', 'conducteur')
 def modifier(id):
-    t = Tache.query.get_or_404(id)
+    t = _get_tache_or_404(id)
     form = TacheForm(obj=t)
     _populate(form)
     if request.method == 'GET':
@@ -85,7 +113,7 @@ def modifier(id):
 @login_required
 @role_required('admin', 'conducteur')
 def supprimer(id):
-    t = Tache.query.get_or_404(id)
+    t = _get_tache_or_404(id)
     db.session.delete(t)
     db.session.commit()
     flash("Tâche supprimée.", 'info')

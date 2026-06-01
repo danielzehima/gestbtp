@@ -7,21 +7,33 @@ from app.models.chantier import Chantier
 from app.utils.helpers import save_upload, allowed_file
 from app.services.storage_service import upload_photo, delete_photo, is_configured
 from app.auth.decorators import role_required
-from app.utils.plans import abonnement_requis
+from app.utils.plans import abonnement_requis, current_compte_id
+from app.models.user import RoleEnum
 
 photos_bp = Blueprint('photos', __name__)
+
+
+def _get_chantier_or_404(chantier_id):
+    """Chantier garanti appartenir à l'entreprise courante (admin = tout)."""
+    ch = Chantier.query.get_or_404(chantier_id)
+    if current_user.role != RoleEnum.ADMIN:
+        if ch.compte_id != current_compte_id(current_user):
+            abort(404)
+    return ch
 
 
 @photos_bp.route('/')
 @login_required
 @abonnement_requis
 def index():
-    """Page Photos globale : liste des chantiers avec leur nombre de photos
-    et un aperçu, pour accéder à la galerie de chacun."""
-    from app.models.user import RoleEnum
-    query = Chantier.query
-    if current_user.role == RoleEnum.CLIENT:
-        query = query.filter_by(client_id=current_user.id)
+    """Page Photos globale : chantiers de l'entreprise avec aperçu photos."""
+    if current_user.role == RoleEnum.ADMIN:
+        query = Chantier.query
+    else:
+        cid = current_compte_id(current_user)
+        query = Chantier.query.filter_by(compte_id=cid)
+        if current_user.role == RoleEnum.CLIENT:
+            query = query.filter_by(client_id=current_user.id)
     chantiers = query.order_by(Chantier.date_creation.desc()).all()
     data = []
     for c in chantiers:
@@ -33,7 +45,7 @@ def index():
 @photos_bp.route('/chantier/<int:chantier_id>')
 @login_required
 def galerie(chantier_id):
-    chantier = Chantier.query.get_or_404(chantier_id)
+    chantier = _get_chantier_or_404(chantier_id)
     photos = Photo.query.filter_by(chantier_id=chantier_id).order_by(Photo.date_upload.desc()).all()
     return render_template('photos/galerie.html', chantier=chantier, photos=photos)
 
@@ -42,7 +54,7 @@ def galerie(chantier_id):
 @login_required
 @role_required('admin', 'conducteur')
 def upload(chantier_id):
-    chantier = Chantier.query.get_or_404(chantier_id)
+    chantier = _get_chantier_or_404(chantier_id)
     count = 0
     errors = 0
     for f in request.files.getlist('photos'):
@@ -81,6 +93,7 @@ def upload(chantier_id):
 @role_required('admin', 'conducteur')
 def supprimer(id):
     photo = Photo.query.get_or_404(id)
+    _get_chantier_or_404(photo.chantier_id)  # garantit l'appartenance à l'entreprise
     chantier_id = photo.chantier_id
     cf = photo.chemin_fichier or ''
     try:

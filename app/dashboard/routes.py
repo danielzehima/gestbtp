@@ -8,7 +8,7 @@ from app.models.tache import Tache, StatutTache
 from app.models.user import User, RoleEnum, PlanEnum, StatutAboEnum
 from app.models.compte import Compte
 from app.auth.decorators import role_required
-from app.utils.plans import abonnement_requis
+from app.utils.plans import abonnement_requis, current_compte_id
 from app.extensions import db
 
 dashboard_bp = Blueprint('dashboard', __name__)
@@ -25,17 +25,31 @@ def root():
 @login_required
 @abonnement_requis
 def index():
-    total = Chantier.query.count()
-    actifs = Chantier.query.filter_by(statut=StatutChantier.EN_COURS).count()
-    termines = Chantier.query.filter_by(statut=StatutChantier.TERMINE).count()
-    nb_rapports = Rapport.query.count()
-    nb_retard = Tache.query.filter(
+    from app.models.user import RoleEnum
+    cid = current_compte_id(current_user)
+
+    # Bases de requêtes limitées à l'entreprise (admin = tout voir)
+    if current_user.role == RoleEnum.ADMIN:
+        ch_q = Chantier.query
+        rap_q = Rapport.query
+        tache_q = Tache.query
+    else:
+        ch_ids = [c.id for c in Chantier.query.filter_by(compte_id=cid).all()]
+        ch_q = Chantier.query.filter_by(compte_id=cid)
+        rap_q = Rapport.query.filter(Rapport.chantier_id.in_(ch_ids)) if ch_ids else Rapport.query.filter(db.false())
+        tache_q = Tache.query.filter(Tache.chantier_id.in_(ch_ids)) if ch_ids else Tache.query.filter(db.false())
+
+    total = ch_q.count()
+    actifs = ch_q.filter_by(statut=StatutChantier.EN_COURS).count()
+    termines = ch_q.filter_by(statut=StatutChantier.TERMINE).count()
+    nb_rapports = rap_q.count()
+    nb_retard = tache_q.filter(
         Tache.date_limite < date.today(),
         Tache.statut != StatutTache.TERMINE
     ).count()
 
-    derniers_rapports = Rapport.query.order_by(Rapport.date_creation.desc()).limit(5).all()
-    taches_urgentes = Tache.query.filter(
+    derniers_rapports = rap_q.order_by(Rapport.date_creation.desc()).limit(5).all()
+    taches_urgentes = tache_q.filter(
         Tache.statut != StatutTache.TERMINE
     ).order_by(Tache.date_limite.asc().nullslast()).limit(5).all()
 

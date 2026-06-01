@@ -8,9 +8,26 @@ from app.models.photo import Photo
 from app.journal.forms import RapportForm
 from app.utils.helpers import save_upload, allowed_file
 from app.auth.decorators import role_required
-from app.utils.plans import abonnement_requis
+from app.utils.plans import abonnement_requis, current_compte_id
+from app.models.user import RoleEnum
 
 journal_bp = Blueprint('journal', __name__)
+
+
+def _compte_chantier_ids():
+    """IDs des chantiers de l'entreprise courante (None = admin → tous)."""
+    if current_user.role == RoleEnum.ADMIN:
+        return None
+    cid = current_compte_id(current_user)
+    return [c.id for c in Chantier.query.filter_by(compte_id=cid).all()]
+
+
+def _get_rapport_or_404(id):
+    r = Rapport.query.get_or_404(id)
+    ids = _compte_chantier_ids()
+    if ids is not None and r.chantier_id not in ids:
+        abort(404)
+    return r
 
 
 @journal_bp.route('/')
@@ -19,10 +36,23 @@ journal_bp = Blueprint('journal', __name__)
 def liste():
     date_filter = request.args.get('date')
     query = Rapport.query
+    ids = _compte_chantier_ids()
+    if ids is not None:
+        query = query.filter(Rapport.chantier_id.in_(ids)) if ids else query.filter(db.false())
     if date_filter:
         query = query.filter_by(date=date_filter)
     rapports = query.order_by(Rapport.date.desc()).all()
     return render_template('journal/liste.html', rapports=rapports, date_filter=date_filter)
+
+
+def _chantier_choices():
+    """Chantiers de l'entreprise courante uniquement."""
+    if current_user.role == RoleEnum.ADMIN:
+        chantiers = Chantier.query.all()
+    else:
+        cid = current_compte_id(current_user)
+        chantiers = Chantier.query.filter_by(compte_id=cid).all()
+    return [(c.id, f"{c.reference} - {c.nom}") for c in chantiers]
 
 
 @journal_bp.route('/nouveau', methods=['GET', 'POST'])
@@ -30,7 +60,7 @@ def liste():
 @role_required('admin', 'conducteur')
 def nouveau():
     form = RapportForm()
-    form.chantier_id.choices = [(c.id, f"{c.reference} - {c.nom}") for c in Chantier.query.all()]
+    form.chantier_id.choices = _chantier_choices()
     if form.validate_on_submit():
         rapport = Rapport(
             chantier_id=form.chantier_id.data,
@@ -88,7 +118,7 @@ def nouveau():
 @journal_bp.route('/<int:id>')
 @login_required
 def detail(id):
-    rapport = Rapport.query.get_or_404(id)
+    rapport = _get_rapport_or_404(id)
     return render_template('journal/detail.html', rapport=rapport)
 
 
@@ -96,7 +126,7 @@ def detail(id):
 @login_required
 @role_required('admin', 'conducteur')
 def supprimer(id):
-    rapport = Rapport.query.get_or_404(id)
+    rapport = _get_rapport_or_404(id)
     db.session.delete(rapport)
     db.session.commit()
     flash("Rapport supprimé.", 'info')
