@@ -84,6 +84,22 @@ def support():
     return render_template('pages/support.html')
 
 
+# ===== PWA : service worker servi à la racine (scope complet) + offline =====
+@pages_bp.route('/sw.js')
+def service_worker():
+    from flask import send_from_directory, current_app
+    resp = send_from_directory(current_app.static_folder, 'sw.js')
+    resp.headers['Content-Type'] = 'application/javascript'
+    resp.headers['Service-Worker-Allowed'] = '/'
+    resp.headers['Cache-Control'] = 'no-cache'
+    return resp
+
+
+@pages_bp.route('/offline')
+def offline():
+    return render_template('pages/offline.html')
+
+
 _PRIVACY = """
 <h2>1. Collecte des données</h2>
 <p>GESTBTP collecte uniquement les données nécessaires au fonctionnement du service : nom, email, téléphone, données de chantier saisies par les utilisateurs.</p>
