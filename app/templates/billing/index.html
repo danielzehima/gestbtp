@@ -11,10 +11,22 @@
       <div class="label" style="color:var(--text-muted);font-size:12px;text-transform:uppercase">Forfait actuel</div>
       <div style="font-size:28px;font-weight:800">{{ plan_actuel|capitalize }}</div>
       <div style="margin-top:6px">
-        {% if compte.statut_abo.value == 'actif' %}<span class="badge badge-en_cours">Actif</span>
-        {% elif compte.statut_abo.value == 'suspendu' %}<span class="badge badge-suspendu">Suspendu</span>
-        {% else %}<span class="badge badge-bloque">Annulé</span>{% endif %}
+        {% if compte.est_abonne %}<span class="badge badge-en_cours">Abonné · Actif</span>
+        {% elif compte.en_essai %}<span class="badge badge-moyenne">Essai gratuit</span>
+        {% else %}<span class="badge badge-bloque">Essai terminé</span>{% endif %}
       </div>
+      {% if compte.en_essai and not compte.est_abonne %}
+      <div style="margin-top:8px;font-size:14px;color:var(--primary)">
+        <i class="fas fa-clock"></i>
+        {% if compte.jours_essai_restants > 1 %}
+          Il vous reste <strong>{{ compte.jours_essai_restants }} jours</strong> d'essai gratuit
+        {% elif compte.jours_essai_restants == 1 %}
+          <strong>Dernier jour</strong> d'essai gratuit
+        {% else %}
+          Votre essai se termine aujourd'hui
+        {% endif %}
+      </div>
+      {% endif %}
     </div>
     <div style="text-align:right;color:var(--text-muted);font-size:14px">
       <div>Chantiers : <strong>{{ limites.max_chantiers if limites.max_chantiers is not none else '∞' }}</strong></div>

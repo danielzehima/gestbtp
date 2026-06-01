@@ -54,6 +54,26 @@
         <div class="avatar">{{ current_user.nom[0]|upper }}</div>
       </div>
     </header>
+
+    {# Bandeau d'essai gratuit : rappel des jours restants #}
+    {% if abo and abo.en_essai and not abo.est_abonne %}
+    <div class="trial-banner {{ 'urgent' if abo.jours_restants <= 3 }}">
+      <span>
+        <i class="fas fa-gift"></i>
+        {% if abo.jours_restants > 1 %}
+          Essai gratuit : il vous reste <strong>{{ abo.jours_restants }} jours</strong>.
+        {% elif abo.jours_restants == 1 %}
+          Essai gratuit : <strong>dernier jour</strong> aujourd'hui !
+        {% else %}
+          Votre essai gratuit se termine aujourd'hui.
+        {% endif %}
+      </span>
+      <a href="{{ url_for('billing.index') }}" class="btn btn-sm" style="background:#fff;color:var(--primary)">
+        Choisir un forfait
+      </a>
+    </div>
+    {% endif %}
+
     <main class="content">
       {% block content %}{% endblock %}
     </main>

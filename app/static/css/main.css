@@ -267,6 +267,23 @@ textarea { min-height: 90px; resize: vertical; }
 }
 .tabs a.active { color: var(--primary); border-bottom-color: var(--primary); }
 
+/* ============ Bandeau d'essai gratuit ============ */
+.trial-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap;
+  background: linear-gradient(90deg, var(--primary), #FF9248);
+  color: #fff; padding: 10px 24px; font-size: 14px; font-weight: 500;
+}
+.trial-banner i { margin-right: 6px; }
+.trial-banner.urgent {
+  background: linear-gradient(90deg, #DC2626, #F59E0B);
+  animation: trialPulse 2s infinite;
+}
+@keyframes trialPulse { 0%,100%{opacity:1} 50%{opacity:.85} }
+@media (max-width: 600px) {
+  .trial-banner { padding: 10px 14px; font-size: 13px; }
+}
+
 /* ============ Toasts (notifications glissantes) ============ */
 .toast-stack {
   position: fixed; top: 78px; right: 20px; z-index: 3000;

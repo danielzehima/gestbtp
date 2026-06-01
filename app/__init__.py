@@ -97,10 +97,21 @@ def create_app(config_name='development'):
         # can_write = autorisé à modifier les données opérationnelles.
         # L'admin SaaS est en LECTURE SEULE sur les données clients.
         can_write = False
+        # Infos d'abonnement de l'entreprise (essai / abonné)
+        abo = None
         try:
             from flask_login import current_user
             if current_user.is_authenticated:
                 can_write = current_user.role.value == 'conducteur'
+                if current_user.role.value != 'admin':
+                    compte = getattr(current_user, 'compte', None)
+                    if compte:
+                        abo = {
+                            'est_abonne': compte.est_abonne,
+                            'en_essai': compte.en_essai,
+                            'jours_restants': compte.jours_essai_restants,
+                            'plan': compte.plan.value,
+                        }
         except Exception:
             pass
         return {
@@ -113,6 +124,7 @@ def create_app(config_name='development'):
             'CONTACT_PHONE': app.config['CONTACT_PHONE'],
             'CONTACT_ADDR': app.config['CONTACT_ADDR'],
             'can_write': can_write,
+            'abo': abo,
         }
 
     # Alias courts /login /register et pages publiques
