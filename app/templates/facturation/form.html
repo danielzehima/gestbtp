@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}{{ mode }} {{ type_doc }} - GESTBTP{% endblock %}
+{% block content %}
+<h1 class="page-title">{{ mode }} {{ 'un devis' if type_doc=='devis' else 'une facture' }}</h1>
+
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="type" value="{{ doc.type.value if doc else type_doc }}">
+
+  <div class="card">
+    <h3 style="font-size:15px;margin-bottom:14px">Client</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Nom du client *</label>
+        <input name="client_nom" class="form-control" required value="{{ doc.client_nom if doc else '' }}"></div>
+      <div class="form-group"><label>Chantier (optionnel)</label>
+        <select name="chantier_id" class="form-select">
+          {% for cid, label in chantiers %}
+          <option value="{{ cid }}" {% if doc and doc.chantier_id==cid %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label>
+        <input name="client_email" type="email" class="form-control" value="{{ doc.client_email if doc else '' }}"></div>
+      <div class="form-group"><label>Téléphone</label>
+        <input name="client_tel" class="form-control" value="{{ doc.client_tel if doc else '' }}"></div>
+    </div>
+    <div class="form-group"><label>Adresse</label>
+      <input name="client_adresse" class="form-control" value="{{ doc.client_adresse if doc else '' }}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Date d'émission</label>
+        <input name="date_emission" type="date" class="form-control" value="{{ doc.date_emission.isoformat() if doc and doc.date_emission else '' }}"></div>
+      <div class="form-group"><label>Échéance</label>
+        <input name="date_echeance" type="date" class="form-control" value="{{ doc.date_echeance.isoformat() if doc and doc.date_echeance else '' }}"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:15px;margin-bottom:14px">Lignes</h3>
+    <table class="data" id="lignesTable" style="margin-bottom:12px">
+      <thead><tr><th style="width:45%">Désignation</th><th>Qté</th><th>Unité</th><th>Prix unitaire</th><th>Total</th><th></th></tr></thead>
+      <tbody id="lignesBody">
+        {% if doc and doc.lignes %}
+          {% for l in doc.lignes %}
+          <tr class="ligne">
+            <td><input name="designation[]" class="form-control" value="{{ l.designation }}"></td>
+            <td><input name="quantite[]" type="number" step="0.01" class="form-control qte" style="width:80px" value="{{ l.quantite }}"></td>
+            <td><input name="unite[]" class="form-control" style="width:70px" value="{{ l.unite or '' }}"></td>
+            <td><input name="prix_unitaire[]" type="number" step="0.01" class="form-control pu" style="width:120px" value="{{ l.prix_unitaire }}"></td>
+            <td class="totLigne">0</td>
+            <td><button type="button" class="btn btn-danger btn-sm delLigne"><i class="fas fa-trash"></i></button></td>
+          </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+    <button type="button" id="addLigne" class="btn btn-outline btn-sm"><i class="fas fa-plus"></i> Ajouter une ligne</button>
+
+    <div style="margin-top:18px;max-width:340px;margin-left:auto">
+      <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Total HT</span><strong id="totalHT">0 FCFA</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;align-items:center">
+        <span>TVA <input name="tva_taux" type="number" step="0.01" value="{{ doc.tva_taux if doc else 18 }}" style="width:60px;padding:4px" id="tvaTaux">%</span>
+        <strong id="montantTVA">0 FCFA</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:2px solid var(--primary);font-size:18px">
+        <span><strong>Total TTC</strong></span><strong id="totalTTC" style="color:var(--primary)">0 FCFA</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="form-group"><label>Notes</label>
+      <textarea name="notes" class="form-control" rows="2">{{ doc.notes if doc else '' }}</textarea></div>
+    <div class="form-group"><label>Conditions de paiement</label>
+      <textarea name="conditions" class="form-control" rows="2">{{ doc.conditions if doc else 'Paiement à 30 jours.' }}</textarea></div>
+  </div>
+
+  <a href="{{ url_for('facturation.liste') }}" class="btn btn-outline">Annuler</a>
+  <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Enregistrer</button>
+</form>
+
+<script>
+function fmt(n){ return Math.round(n).toLocaleString('fr-FR').replace(/ /g,' ') + ' FCFA'; }
+function ligneHTML(){
+  return `<tr class="ligne">
+    <td><input name="designation[]" class="form-control"></td>
+    <td><input name="quantite[]" type="number" step="0.01" class="form-control qte" style="width:80px" value="1"></td>
+    <td><input name="unite[]" class="form-control" style="width:70px"></td>
+    <td><input name="prix_unitaire[]" type="number" step="0.01" class="form-control pu" style="width:120px" value="0"></td>
+    <td class="totLigne">0</td>
+    <td><button type="button" class="btn btn-danger btn-sm delLigne"><i class="fas fa-trash"></i></button></td></tr>`;
+}
+const body=document.getElementById('lignesBody');
+function recalc(){
+  let ht=0;
+  body.querySelectorAll('.ligne').forEach(tr=>{
+    const q=parseFloat(tr.querySelector('.qte').value)||0;
+    const p=parseFloat(tr.querySelector('.pu').value)||0;
+    const t=q*p; ht+=t;
+    tr.querySelector('.totLigne').textContent=fmt(t);
+  });
+  const tva=(parseFloat(document.getElementById('tvaTaux').value)||0)/100;
+  document.getElementById('totalHT').textContent=fmt(ht);
+  document.getElementById('montantTVA').textContent=fmt(ht*tva);
+  document.getElementById('totalTTC').textContent=fmt(ht*(1+tva));
+}
+document.getElementById('addLigne').addEventListener('click',()=>{ body.insertAdjacentHTML('beforeend',ligneHTML()); recalc(); });
+body.addEventListener('input',recalc);
+body.addEventListener('click',e=>{ if(e.target.closest('.delLigne')){ e.target.closest('tr').remove(); recalc(); }});
+document.getElementById('tvaTaux').addEventListener('input',recalc);
+// au moins une ligne au départ
+if(!body.querySelector('.ligne')){ body.insertAdjacentHTML('beforeend',ligneHTML()); }
+recalc();
+</script>
+{% endblock %}

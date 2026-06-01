@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Devis & Factures - GESTBTP{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+  <h1 class="page-title" style="margin:0">Devis & Factures</h1>
+  {% if can_write %}
+  <div style="display:flex;gap:8px">
+    <a href="{{ url_for('facturation.nouveau', type='devis') }}" class="btn btn-outline"><i class="fas fa-file-lines"></i> Nouveau devis</a>
+    <a href="{{ url_for('facturation.nouveau', type='facture') }}" class="btn btn-primary"><i class="fas fa-file-invoice"></i> Nouvelle facture</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card p-3 mb-4">
+  <div class="d-flex flex-nowrap align-items-center gap-2 overflow-auto">
+    <input type="text" data-live-search="#tableDocs tbody tr" placeholder="🔍 Rechercher n°, client..."
+           class="form-control flex-grow-1" style="min-width:200px">
+    <select data-live-filter="#tableDocs tbody tr" data-filter-attr="data-type" class="form-select" style="width:160px;flex:0 0 auto">
+      <option value="">Tous</option>
+      <option value="devis">Devis</option>
+      <option value="facture">Factures</option>
+    </select>
+  </div>
+</div>
+
+<table class="data" id="tableDocs">
+  <thead><tr><th>N°</th><th>Type</th><th>Client</th><th>Date</th><th>Total TTC</th><th>Statut</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for d in documents %}
+    <tr data-type="{{ d.type.value }}" data-search="{{ d.numero }} {{ d.client_nom }}">
+      <td><strong>{{ d.numero }}</strong></td>
+      <td>{% if d.type.value=='devis' %}<span class="badge badge-preparation">Devis</span>{% else %}<span class="badge badge-termine">Facture</span>{% endif %}</td>
+      <td>{{ d.client_nom }}</td>
+      <td>{{ d.date_emission.strftime('%d/%m/%Y') if d.date_emission else '—' }}</td>
+      <td>{{ "{:,.0f}".format(d.total_ttc).replace(',', ' ') }} FCFA</td>
+      <td>
+        {% set sc = {'brouillon':'badge-a_faire','envoye':'badge-moyenne','accepte':'badge-en_cours','refuse':'badge-bloque','paye':'badge-en_cours','annule':'badge-bloque'} %}
+        <span class="badge {{ sc.get(d.statut.value,'badge-a_faire') }}">{{ d.statut.value|capitalize }}</span>
+      </td>
+      <td>
+        <a href="{{ url_for('facturation.detail', id=d.id) }}" class="btn btn-outline btn-sm" title="Voir"><i class="fas fa-eye"></i></a>
+        <a href="{{ url_for('facturation.pdf', id=d.id) }}" class="btn btn-outline btn-sm" title="PDF"><i class="fas fa-file-pdf"></i></a>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted)">Aucun document. Créez votre premier devis !</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

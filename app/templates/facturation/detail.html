@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}{{ doc.numero }} - GESTBTP{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+  <h1 class="page-title" style="margin:0">
+    {{ 'Devis' if doc.type.value=='devis' else 'Facture' }} {{ doc.numero }}
+  </h1>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="{{ url_for('facturation.pdf', id=doc.id) }}" class="btn btn-dark"><i class="fas fa-file-pdf"></i> PDF</a>
+    {% if can_write %}
+    <a href="{{ url_for('facturation.modifier', id=doc.id) }}" class="btn btn-outline"><i class="fas fa-edit"></i> Modifier</a>
+    {% if doc.type.value=='devis' %}
+    <form method="post" action="{{ url_for('facturation.convertir', id=doc.id) }}" style="display:inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-primary"><i class="fas fa-arrow-right"></i> Convertir en facture</button>
+    </form>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="form-row">
+    <div>
+      <strong>Client :</strong> {{ doc.client_nom }}<br>
+      <small style="color:var(--text-muted)">{{ doc.client_adresse or '' }} {{ doc.client_tel or '' }}</small>
+    </div>
+    <div style="text-align:right">
+      <strong>Émis le :</strong> {{ doc.date_emission.strftime('%d/%m/%Y') if doc.date_emission else '—' }}<br>
+      {% if doc.date_echeance %}<strong>Échéance :</strong> {{ doc.date_echeance.strftime('%d/%m/%Y') }}{% endif %}
+      {% if doc.chantier %}<br><strong>Chantier :</strong> {{ doc.chantier.nom }}{% endif %}
+    </div>
+  </div>
+</div>
+
+<table class="data">
+  <thead><tr><th>Désignation</th><th>Qté</th><th>Unité</th><th>P.U.</th><th>Total HT</th></tr></thead>
+  <tbody>
+    {% for l in doc.lignes %}
+    <tr><td>{{ l.designation }}</td><td>{{ l.quantite }}</td><td>{{ l.unite or '' }}</td>
+      <td>{{ "{:,.0f}".format(l.prix_unitaire).replace(',', ' ') }}</td>
+      <td>{{ "{:,.0f}".format(l.total_ligne).replace(',', ' ') }} FCFA</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="card" style="max-width:340px;margin-left:auto">
+  <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Total HT</span><strong>{{ "{:,.0f}".format(doc.total_ht).replace(',', ' ') }} FCFA</strong></div>
+  <div style="display:flex;justify-content:space-between;padding:4px 0"><span>TVA ({{ doc.tva_taux }}%)</span><strong>{{ "{:,.0f}".format(doc.montant_tva).replace(',', ' ') }} FCFA</strong></div>
+  <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:2px solid var(--primary);font-size:18px"><span><strong>Total TTC</strong></span><strong style="color:var(--primary)">{{ "{:,.0f}".format(doc.total_ttc).replace(',', ' ') }} FCFA</strong></div>
+</div>
+
+{% if can_write %}
+<div class="card">
+  <strong>Changer le statut :</strong>
+  <form method="post" action="{{ url_for('facturation.changer_statut', id=doc.id) }}" style="display:inline-flex;gap:8px;margin-left:8px">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <select name="statut" class="form-select" style="width:auto">
+      {% for s in ['brouillon','envoye','accepte','refuse','paye','annule'] %}
+      <option value="{{ s }}" {% if doc.statut.value==s %}selected{% endif %}>{{ s|capitalize }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-dark btn-sm">Appliquer</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

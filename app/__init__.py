@@ -38,7 +38,7 @@ def create_app(config_name='development'):
             pass
 
     # Import des modèles (pour Alembic / create_all)
-    from app.models import user, compte, chantier, rapport, tache, photo, notification, paiement, setting  # noqa
+    from app.models import user, compte, chantier, rapport, tache, photo, notification, paiement, setting, facturation  # noqa
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -57,6 +57,7 @@ def create_app(config_name='development'):
     from app.billing.routes import billing_bp
     from app.admin.routes import admin_bp
     from app.planning.routes import planning_bp
+    from app.facturation.routes import facturation_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp)
@@ -69,6 +70,7 @@ def create_app(config_name='development'):
     app.register_blueprint(billing_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(planning_bp)
+    app.register_blueprint(facturation_bp)
 
     # Blueprints API REST (CSRF désactivé pour API JWT)
     from app.api.auth_api import auth_api
