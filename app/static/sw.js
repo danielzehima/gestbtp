@@ -2,7 +2,7 @@
 // Stratégie : network-first pour les pages (toujours à jour), cache-first
 // pour les assets statiques (rapide), page hors-ligne en secours.
 
-const CACHE = 'gestbtp-v2';
+const CACHE = 'gestbtp-v3';
 const OFFLINE_URL = '/offline';
 
 // Assets pré-mis en cache à l'installation
@@ -69,12 +69,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Pages / navigation -> network-first, repli sur cache puis page offline
+  // Pages sensibles/dynamiques : JAMAIS de cache (auth, paiement, abonnement,
+  // équipe, API, webhooks...). Toujours le réseau, sinon page offline.
+  const NO_CACHE = ['/auth', '/register', '/login', '/logout', '/paiement',
+                    '/abonnement', '/equipe', '/admin', '/api'];
+  if (NO_CACHE.some((p) => url.pathname.startsWith(p))) {
+    event.respondWith(
+      fetch(req).catch(() => caches.match(OFFLINE_URL))
+    );
+    return;
+  }
+
+  // Autres pages / navigation -> network-first, repli cache puis page offline.
+  // On ne met PAS en cache les réponses redirigées (302) pour éviter de
+  // "rejouer" une mauvaise page.
   event.respondWith(
     fetch(req)
       .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        if (!res.redirected && res.ok && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
         return res;
       })
       .catch(() =>
