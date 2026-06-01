@@ -7,7 +7,7 @@ from app.models.chantier import Chantier
 from app.models.photo import Photo
 from app.journal.forms import RapportForm
 from app.utils.helpers import save_upload, allowed_file
-from app.auth.decorators import role_required
+from app.auth.decorators import role_required, client_data_write
 from app.utils.plans import abonnement_requis, current_compte_id
 from app.models.user import RoleEnum
 
@@ -58,6 +58,7 @@ def _chantier_choices():
 @journal_bp.route('/nouveau', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def nouveau():
     form = RapportForm()
     form.chantier_id.choices = _chantier_choices()
@@ -125,6 +126,7 @@ def detail(id):
 @journal_bp.route('/<int:id>/modifier', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def modifier(id):
     rapport = _get_rapport_or_404(id)
     form = RapportForm(obj=rapport)
@@ -185,6 +187,7 @@ def modifier(id):
 @journal_bp.route('/<int:id>/supprimer', methods=['POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def supprimer(id):
     rapport = _get_rapport_or_404(id)
     db.session.delete(rapport)

@@ -4,7 +4,7 @@ from app.extensions import db
 from app.models.chantier import Chantier, StatutChantier
 from app.models.user import User, RoleEnum
 from app.chantiers.forms import ChantierForm
-from app.auth.decorators import role_required
+from app.auth.decorators import role_required, client_data_write
 from app.utils.plans import (can_create_chantier, chantiers_restants, get_compte,
                              abonnement_requis, current_compte_id)
 
@@ -63,6 +63,7 @@ def liste():
 @chantiers_bp.route('/nouveau', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def nouveau():
     if not can_create_chantier(current_user):
         flash("Vous avez atteint la limite de chantiers de votre forfait. "
@@ -131,6 +132,7 @@ def meteo(id):
 @chantiers_bp.route('/<int:id>/modifier', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def modifier(id):
     ch = _get_chantier_or_404(id)
     form = ChantierForm(obj=ch)
@@ -159,6 +161,7 @@ def modifier(id):
 @chantiers_bp.route('/<int:id>/supprimer', methods=['POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def supprimer(id):
     ch = _get_chantier_or_404(id)
     db.session.delete(ch)

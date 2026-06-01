@@ -5,7 +5,7 @@ from app.models.tache import Tache, PrioriteTache, StatutTache
 from app.models.chantier import Chantier
 from app.models.user import User
 from app.taches.forms import TacheForm
-from app.auth.decorators import role_required
+from app.auth.decorators import role_required, client_data_write
 from app.utils.plans import abonnement_requis, current_compte_id
 from app.models.user import RoleEnum
 from app.services.notification_service import notify_user
@@ -62,6 +62,7 @@ def liste():
 @taches_bp.route('/nouvelle', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def nouveau():
     form = TacheForm()
     _populate(form)
@@ -87,6 +88,7 @@ def nouveau():
 @taches_bp.route('/<int:id>/modifier', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def modifier(id):
     t = _get_tache_or_404(id)
     form = TacheForm(obj=t)
@@ -112,6 +114,7 @@ def modifier(id):
 @taches_bp.route('/<int:id>/supprimer', methods=['POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def supprimer(id):
     t = _get_tache_or_404(id)
     db.session.delete(t)
@@ -123,6 +126,7 @@ def supprimer(id):
 @taches_bp.route('/<int:id>/statut', methods=['POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def changer_statut(id):
     """Change le statut d'une tâche (utilisé par le Kanban drag & drop).
     Réponse JSON. Vérifie l'appartenance à l'entreprise via _get_tache_or_404."""

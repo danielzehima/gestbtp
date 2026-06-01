@@ -3,7 +3,7 @@
 {% block content %}
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
   <h1 class="page-title" style="margin:0">Chantiers</h1>
-  {% if current_user.role.value in ['admin','conducteur'] %}
+  {% if can_write %}
     <a href="{{ url_for('chantiers.nouveau') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Nouveau chantier</a>
   {% endif %}
 </div>
@@ -48,10 +48,10 @@
       </td>
       <td>
         <a href="{{ url_for('chantiers.detail', id=c.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
-        {% if current_user.role.value in ['admin','conducteur'] %}
+        {% if can_write %}
         <a href="{{ url_for('chantiers.modifier', id=c.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i></a>
         {% endif %}
-        {% if current_user.is_admin %}
+        {% if can_write %}
         <form method="post" action="{{ url_for('chantiers.supprimer', id=c.id) }}"
               data-confirm="Supprimer ce chantier ?" style="display:inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

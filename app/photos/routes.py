@@ -6,7 +6,7 @@ from app.models.photo import Photo
 from app.models.chantier import Chantier
 from app.utils.helpers import save_upload, allowed_file
 from app.services.storage_service import upload_photo, delete_photo, is_configured
-from app.auth.decorators import role_required
+from app.auth.decorators import role_required, client_data_write
 from app.utils.plans import abonnement_requis, current_compte_id
 from app.models.user import RoleEnum
 
@@ -53,6 +53,7 @@ def galerie(chantier_id):
 @photos_bp.route('/chantier/<int:chantier_id>/upload', methods=['POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def upload(chantier_id):
     chantier = _get_chantier_or_404(chantier_id)
     count = 0
@@ -91,6 +92,7 @@ def upload(chantier_id):
 @photos_bp.route('/<int:id>/supprimer', methods=['POST'])
 @login_required
 @role_required('admin', 'conducteur')
+@client_data_write
 def supprimer(id):
     photo = Photo.query.get_or_404(id)
     _get_chantier_or_404(photo.chantier_id)  # garantit l'appartenance à l'entreprise

@@ -2,11 +2,11 @@
 {% block content %}
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
   <h1 class="page-title" style="margin:0">Tâches</h1>
-  {% if current_user.role.value in ['admin','conducteur'] %}
+  {% if can_write %}
     <a href="{{ url_for('taches.nouveau') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Nouvelle tâche</a>
   {% endif %}
 </div>
-{% if current_user.role.value in ['admin','conducteur'] %}
+{% if can_write %}
 <p class="page-subtitle"><i class="fas fa-hand-pointer"></i> Glissez-déposez les cartes pour changer leur statut</p>
 {% endif %}
 
@@ -31,7 +31,7 @@
         <span class="badge badge-{{ t.priorite.value }}">{{ t.priorite.value }}</span>
         {% if t.date_limite %}<br><small>📅 {{ t.date_limite.strftime('%d/%m/%Y') }}</small>{% endif %}
         {% if t.responsable %}<br><small>👤 {{ t.responsable.nom }}</small>{% endif %}
-        {% if current_user.role.value in ['admin','conducteur'] %}
+        {% if can_write %}
         <div style="margin-top:6px">
           <a href="{{ url_for('taches.modifier', id=t.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i></a>
           <form method="post" action="{{ url_for('taches.supprimer', id=t.id) }}" data-confirm="Supprimer ?" style="display:inline">
@@ -47,7 +47,7 @@
   {% endfor %}
 </div>
 
-{% if current_user.role.value in ['admin','conducteur'] %}
+{% if can_write %}
 <div id="kanbanToast" class="kanban-toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>

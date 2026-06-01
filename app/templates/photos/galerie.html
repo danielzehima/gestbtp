@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <h1 class="page-title">Photos — {{ chantier.nom }}</h1>
-{% if current_user.role.value in ['admin','conducteur'] %}
+{% if can_write %}
 <div class="card">
   <form method="post" action="{{ url_for('photos.upload', chantier_id=chantier.id) }}" enctype="multipart/form-data" data-photo-upload>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -16,7 +16,7 @@
     {% for p in photos %}
       <div class="photo">
         <img src="{{ p.url }}" loading="lazy">
-        {% if current_user.role.value in ['admin','conducteur'] %}
+        {% if can_write %}
         <div class="actions">
           <form method="post" action="{{ url_for('photos.supprimer', id=p.id) }}" data-confirm="Supprimer ?" style="display:inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

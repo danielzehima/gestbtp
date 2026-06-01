@@ -94,6 +94,15 @@ def create_app(config_name='development'):
             demo_is_iframe = ('youtube.com' in (demo_url or '')) or ('vimeo.com' in (demo_url or ''))
         except Exception:
             pass
+        # can_write = autorisé à modifier les données opérationnelles.
+        # L'admin SaaS est en LECTURE SEULE sur les données clients.
+        can_write = False
+        try:
+            from flask_login import current_user
+            if current_user.is_authenticated:
+                can_write = current_user.role.value == 'conducteur'
+        except Exception:
+            pass
         return {
             'COMPANY_NAME': app.config['COMPANY_NAME'],
             'COLOR_PRIMARY': app.config['COMPANY_COLOR_PRIMARY'],
@@ -103,6 +112,7 @@ def create_app(config_name='development'):
             'CONTACT_EMAIL': app.config['CONTACT_EMAIL'],
             'CONTACT_PHONE': app.config['CONTACT_PHONE'],
             'CONTACT_ADDR': app.config['CONTACT_ADDR'],
+            'can_write': can_write,
         }
 
     # Alias courts /login /register et pages publiques

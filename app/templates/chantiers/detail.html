@@ -3,7 +3,7 @@
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
   <h1 class="page-title" style="margin:0">{{ chantier.nom }}</h1>
   <div>
-    {% if current_user.role.value in ['admin','conducteur'] %}
+    {% if can_write %}
       <a href="{{ url_for('chantiers.modifier', id=chantier.id) }}" class="btn btn-outline"><i class="fas fa-edit"></i> Modifier</a>
     {% endif %}
     <a href="{{ url_for('pdf.chantier', id=chantier.id) }}" class="btn btn-dark"><i class="fas fa-file-pdf"></i> PDF</a>
@@ -127,7 +127,7 @@
 
 <div id="tab-photos" class="tab-pane" style="display:none">
   <div class="card">
-    {% if current_user.role.value in ['admin','conducteur'] %}
+    {% if can_write %}
     <form method="post" action="{{ url_for('photos.upload', chantier_id=chantier.id) }}" enctype="multipart/form-data" data-photo-upload style="margin-bottom:16px">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="file" name="photos" multiple accept="image/*">
@@ -139,7 +139,7 @@
       {% for p in chantier.photos %}
         <div class="photo">
           <img src="{{ p.url }}" alt="" loading="lazy">
-          {% if current_user.role.value in ['admin','conducteur'] %}
+          {% if can_write %}
           <div class="actions">
             <form method="post" action="{{ url_for('photos.supprimer', id=p.id) }}" data-confirm="Supprimer ?" style="display:inline">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
