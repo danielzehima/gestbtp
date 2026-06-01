@@ -2,7 +2,7 @@
 // Stratégie : network-first pour les pages (toujours à jour), cache-first
 // pour les assets statiques (rapide), page hors-ligne en secours.
 
-const CACHE = 'gestbtp-v1';
+const CACHE = 'gestbtp-v2';
 const OFFLINE_URL = '/offline';
 
 // Assets pré-mis en cache à l'installation
@@ -42,7 +42,20 @@ self.addEventListener('fetch', (event) => {
   // Ne pas intercepter les autres domaines (CDN, Supabase, Open-Meteo...)
   if (url.origin !== self.location.origin) return;
 
-  // Assets statiques -> cache-first
+  // CSS/JS -> network-first (toujours la dernière version ; repli cache hors-ligne)
+  if (url.pathname.startsWith('/static/') &&
+      (url.pathname.endsWith('.js') || url.pathname.endsWith('.css'))) {
+    event.respondWith(
+      fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        return res;
+      }).catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Autres assets statiques (images, icônes, manifest) -> cache-first
   if (url.pathname.startsWith('/static/')) {
     event.respondWith(
       caches.match(req).then((cached) =>
