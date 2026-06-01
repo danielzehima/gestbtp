@@ -29,13 +29,24 @@ class Compte(db.Model):
     est_abonne = db.Column(db.Boolean, default=False)        # a payé au moins une fois
     date_fin_essai = db.Column(db.DateTime)                  # fin de l'essai gratuit (None = jamais d'essai)
 
-    # ===== Identité entreprise (en-tête des devis/factures) =====
+    # ===== Identité entreprise (en-tête des documents) =====
     logo_url = db.Column(db.String(500))         # logo de l'entreprise (Supabase Storage)
     raison_sociale = db.Column(db.String(200))   # nom commercial affiché sur les documents
     adresse = db.Column(db.String(300))
     telephone = db.Column(db.String(40))
     email = db.Column(db.String(120))
     site_web = db.Column(db.String(120))
+
+    # ===== Infos légales / fiscales (pied des devis/factures) =====
+    rccm = db.Column(db.String(60))              # registre du commerce
+    nif = db.Column(db.String(60))               # numéro fiscal / NIF
+    forme_juridique = db.Column(db.String(60))   # SARL, SA, EI...
+    capital = db.Column(db.String(60))
+    banque = db.Column(db.String(120))
+    iban = db.Column(db.String(80))              # coordonnées bancaires
+
+    # ===== Apparence =====
+    couleur = db.Column(db.String(7), default='#FF6B00')   # couleur d'accent (hex)
 
     # Membres de l'entreprise (équipe)
     membres = db.relationship(

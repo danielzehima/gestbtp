@@ -31,6 +31,13 @@ def _fmt(n):
 
 def document_pdf(doc, entreprise):
     buf = BytesIO()
+    # Couleur d'accent personnalisée de l'entreprise (fallback orange GESTBTP)
+    try:
+        accent = colors.HexColor(getattr(entreprise, 'couleur', None) or '#FF6B00')
+    except Exception:
+        accent = PRIMARY
+    accent_hex = '#' + accent.hexval()[2:]  # '#ff6b00'
+
     pdf = SimpleDocTemplate(buf, pagesize=A4, leftMargin=2*cm, rightMargin=2*cm,
                             topMargin=2*cm, bottomMargin=2*cm)
     s = getSampleStyleSheet()
@@ -74,7 +81,7 @@ def document_pdf(doc, entreprise):
 
     head = [[
         left_cell,
-        Paragraph(f"<b><font size=22 color='#FF6B00'>{titre}</font></b><br/>"
+        Paragraph(f"<b><font size=22 color='{accent_hex}'>{titre}</font></b><br/>"
                   f"<font size=11>N° {doc.numero}</font>", s['Right']),
     ]]
     t = Table(head, colWidths=[10*cm, 6*cm])
@@ -108,7 +115,7 @@ def document_pdf(doc, entreprise):
         ])
     tbl = Table(rows, colWidths=[7.5*cm, 1.5*cm, 1.8*cm, 2.8*cm, 2.9*cm])
     tbl.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), PRIMARY),
+        ('BACKGROUND', (0, 0), (-1, 0), accent),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 9),
@@ -131,8 +138,8 @@ def document_pdf(doc, entreprise):
         ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
         ('FONTNAME', (1, 2), (-1, 2), 'Helvetica-Bold'),
         ('FONTSIZE', (1, 2), (-1, 2), 12),
-        ('TEXTCOLOR', (1, 2), (-1, 2), PRIMARY),
-        ('LINEABOVE', (1, 2), (-1, 2), 1, PRIMARY),
+        ('TEXTCOLOR', (1, 2), (-1, 2), accent),
+        ('LINEABOVE', (1, 2), (-1, 2), 1, accent),
         ('TOPPADDING', (0, 0), (-1, -1), 4),
     ]))
     story.append(tt)
@@ -149,6 +156,31 @@ def document_pdf(doc, entreprise):
         story.append(Paragraph("Bon pour accord (date + signature) :", s['Normal']))
     else:
         story.append(Paragraph("Merci de votre confiance.", s['Small']))
+
+    # ===== Pied de page : mentions légales de l'entreprise =====
+    mentions = []
+    if entreprise:
+        l1 = ' · '.join(filter(None, [
+            (f"{entreprise.forme_juridique} {ent_nom}" if entreprise.forme_juridique else None),
+            (f"Capital {entreprise.capital}" if entreprise.capital else None),
+        ]))
+        l2 = ' · '.join(filter(None, [
+            (f"RCCM : {entreprise.rccm}" if entreprise.rccm else None),
+            (f"NIF : {entreprise.nif}" if entreprise.nif else None),
+        ]))
+        l3 = ' · '.join(filter(None, [
+            (f"Banque : {entreprise.banque}" if entreprise.banque else None),
+            (f"IBAN : {entreprise.iban}" if entreprise.iban else None),
+        ]))
+        mentions = [x for x in (l1, l2, l3) if x]
+    if mentions:
+        story.append(Spacer(1, 0.8*cm))
+        sep = Table([['']], colWidths=[16*cm])
+        sep.setStyle(TableStyle([('LINEABOVE', (0, 0), (-1, 0), 0.5, accent)]))
+        story.append(sep)
+        story.append(Spacer(1, 0.1*cm))
+        for m in mentions:
+            story.append(Paragraph(f"<font size=7 color='grey'>{m}</font>", s['Normal']))
 
     pdf.build(story)
     buf.seek(0)

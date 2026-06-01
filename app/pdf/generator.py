@@ -23,10 +23,17 @@ def _styles():
     return s
 
 
-def _header_footer(company='GESTBTP'):
+def _accent(entreprise):
+    try:
+        return colors.HexColor(getattr(entreprise, 'couleur', None) or '#FF6B00')
+    except Exception:
+        return PRIMARY
+
+
+def _header_footer(company='GESTBTP', accent=PRIMARY, contact=''):
     def draw(canvas, doc):
         canvas.saveState()
-        canvas.setFillColor(PRIMARY)
+        canvas.setFillColor(accent)
         canvas.rect(0, A4[1] - 1.5 * cm, A4[0], 1.5 * cm, fill=1, stroke=0)
         canvas.setFillColor(colors.white)
         canvas.setFont('Helvetica-Bold', 16)
@@ -36,23 +43,30 @@ def _header_footer(company='GESTBTP'):
                                datetime.now().strftime('%d/%m/%Y %H:%M'))
         canvas.setFillColor(colors.grey)
         canvas.setFont('Helvetica', 8)
-        canvas.drawCentredString(A4[0] / 2, 1 * cm,
-                                 f"Page {doc.page} — Document généré par GESTBTP")
+        pied = f"Page {doc.page}" + (f" — {contact}" if contact else "")
+        canvas.drawCentredString(A4[0] / 2, 1 * cm, pied)
         canvas.restoreState()
     return draw
 
 
-def build_pdf(story):
+def build_pdf(story, entreprise=None):
     buf = BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4,
                             leftMargin=2 * cm, rightMargin=2 * cm,
                             topMargin=2.5 * cm, bottomMargin=2 * cm)
-    doc.build(story, onFirstPage=_header_footer(), onLaterPages=_header_footer())
+    company = (getattr(entreprise, 'raison_sociale', None)
+               or (entreprise.nom if entreprise else 'GESTBTP'))
+    accent = _accent(entreprise)
+    contact = ''
+    if entreprise:
+        contact = ' · '.join(filter(None, [entreprise.telephone, entreprise.email])) or ''
+    hf = _header_footer(company, accent, contact)
+    doc.build(story, onFirstPage=hf, onLaterPages=hf)
     buf.seek(0)
     return buf
 
 
-def rapport_pdf(rapport):
+def rapport_pdf(rapport, entreprise=None):
     s = _styles()
     story = [Spacer(1, 0.5 * cm),
              Paragraph(f"Rapport journalier — {rapport.date.strftime('%d/%m/%Y')}", s['H1Orange'])]
@@ -80,10 +94,10 @@ def rapport_pdf(rapport):
         story.append(Spacer(1, 0.4 * cm))
     story.append(Spacer(1, 1 * cm))
     story.append(Paragraph("Signature : ______________________", s['Normal']))
-    return build_pdf(story)
+    return build_pdf(story, entreprise)
 
 
-def chantier_pdf(chantier):
+def chantier_pdf(chantier, entreprise=None):
     s = _styles()
     story = [Spacer(1, 0.5 * cm),
              Paragraph(f"Fiche chantier — {chantier.nom}", s['H1Orange'])]
@@ -110,10 +124,10 @@ def chantier_pdf(chantier):
     story.append(Paragraph((chantier.description or '—').replace('\n', '<br/>'), s['Normal']))
     story.append(Spacer(1, 1 * cm))
     story.append(Paragraph("Signature : ______________________", s['Normal']))
-    return build_pdf(story)
+    return build_pdf(story, entreprise)
 
 
-def taches_pdf(chantier, taches):
+def taches_pdf(chantier, taches, entreprise=None):
     s = _styles()
     story = [Spacer(1, 0.5 * cm),
              Paragraph(f"Tâches — {chantier.nom}", s['H1Orange'])]
@@ -136,4 +150,4 @@ def taches_pdf(chantier, taches):
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#FAFAFA')]),
     ]))
     story.append(tbl)
-    return build_pdf(story)
+    return build_pdf(story, entreprise)

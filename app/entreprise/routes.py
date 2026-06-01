@@ -30,6 +30,17 @@ def parametres():
         compte.telephone = request.form.get('telephone', '').strip()
         compte.email = request.form.get('email', '').strip()
         compte.site_web = request.form.get('site_web', '').strip()
+        # Infos légales / fiscales
+        compte.rccm = request.form.get('rccm', '').strip()
+        compte.nif = request.form.get('nif', '').strip()
+        compte.forme_juridique = request.form.get('forme_juridique', '').strip()
+        compte.capital = request.form.get('capital', '').strip()
+        compte.banque = request.form.get('banque', '').strip()
+        compte.iban = request.form.get('iban', '').strip()
+        # Couleur d'accent (hex #RRGGBB)
+        coul = request.form.get('couleur', '').strip()
+        if coul.startswith('#') and len(coul) == 7:
+            compte.couleur = coul
         # le logo arrive via l'upload direct (champ caché logo_url)
         logo = request.form.get('logo_url', '').strip()
         if logo:
