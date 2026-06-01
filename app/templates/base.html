@@ -18,6 +18,7 @@
     <nav>
       <a href="{{ url_for('dashboard.index') }}" class="{{ 'active' if request.endpoint=='dashboard.index' }}"><i class="fas fa-th-large"></i> Tableau de bord</a>
       <a href="{{ url_for('chantiers.liste') }}" class="{{ 'active' if 'chantiers' in (request.endpoint or '') }}"><i class="fas fa-hard-hat"></i> Chantiers</a>
+      <a href="{{ url_for('planning.index') }}" class="{{ 'active' if 'planning' in (request.endpoint or '') }}"><i class="fas fa-calendar-days"></i> Planning</a>
       <a href="{{ url_for('journal.liste') }}" class="{{ 'active' if 'journal' in (request.endpoint or '') }}"><i class="fas fa-clipboard"></i> Journal</a>
       <a href="{{ url_for('taches.liste') }}" class="{{ 'active' if 'taches' in (request.endpoint or '') }}"><i class="fas fa-check-square"></i> Tâches</a>
       <a href="{{ url_for('photos.index') }}" class="{{ 'active' if 'photos' in (request.endpoint or '') }}"><i class="fas fa-images"></i> Photos</a>

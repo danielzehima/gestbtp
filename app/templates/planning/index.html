@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Planning - GESTBTP{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+  <h1 class="page-title" style="margin:0">Planning</h1>
+  <a href="{{ url_for('chantiers.nouveau') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Nouveau chantier</a>
+</div>
+<p class="page-subtitle">Vue d'ensemble des chantiers et échéances de tâches</p>
+
+<!-- Légende -->
+<div class="card" style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;font-size:13px;padding:14px 18px">
+  <strong style="color:var(--text-muted)">Chantiers :</strong>
+  <span><i class="fas fa-square" style="color:#F59E0B"></i> Préparation</span>
+  <span><i class="fas fa-square" style="color:#16A34A"></i> En cours</span>
+  <span><i class="fas fa-square" style="color:#9A3412"></i> Suspendu</span>
+  <span><i class="fas fa-square" style="color:#3B82F6"></i> Terminé</span>
+  <strong style="color:var(--text-muted);margin-left:12px">Tâches :</strong>
+  <span>📌 Échéance</span>
+  <span>✓ Terminée</span>
+</div>
+
+<div class="card">
+  <div id="calendar"></div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const el = document.getElementById('calendar');
+  const calendar = new FullCalendar.Calendar(el, {
+    initialView: 'dayGridMonth',
+    locale: 'fr',
+    firstDay: 1,
+    height: 'auto',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,listMonth'
+    },
+    buttonText: { today: "Aujourd'hui", month: 'Mois', week: 'Semaine', list: 'Liste' },
+    events: "{{ url_for('planning.events') }}",
+    eventDisplay: 'block',
+    dayMaxEvents: 3,
+    eventClick: function (info) {
+      // Les chantiers ont une URL -> navigation; les tâches montrent un détail
+      if (info.event.url) return; // laisse FullCalendar suivre l'URL
+      const p = info.event.extendedProps;
+      if (p.type === 'tache') {
+        info.jsEvent.preventDefault();
+        window.toast(`${info.event.title} — chantier ${p.chantier} (${p.priorite})`, 'info');
+      }
+    },
+    eventDidMount: function (info) {
+      info.el.style.cursor = 'pointer';
+    }
+  });
+  calendar.render();
+});
+</script>
+<style>
+/* Harmonisation FullCalendar avec le thème GESTBTP */
+.fc { font-family: 'Inter', sans-serif; }
+.fc .fc-button-primary {
+  background: var(--dark); border-color: var(--dark); font-weight: 600;
+}
+.fc .fc-button-primary:hover { background: #000; }
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: var(--primary); border-color: var(--primary);
+}
+.fc .fc-today-button { text-transform: capitalize; }
+.fc-event { border: none; padding: 1px 4px; font-size: 12px; font-weight: 500; }
+.fc .fc-toolbar-title { font-size: 20px; font-weight: 700; }
+.fc-day-today { background: rgba(255,107,0,.06) !important; }
+@media(max-width:600px){
+  .fc .fc-toolbar { flex-direction: column; gap: 8px; }
+  .fc .fc-toolbar-title { font-size: 16px; }
+}
+</style>
+{% endblock %}
