@@ -47,12 +47,10 @@ def _fetch_json(url):
         return json.loads(resp.read().decode('utf-8'))
 
 
-def geocode(adresse):
-    """Adresse -> (lat, lon, libellé) via Open-Meteo Geocoding. None si échec."""
-    if not adresse or not adresse.strip():
-        return None
+def _geocode_one(terme):
+    """Tente de géocoder un seul terme. Retourne (lat, lon, libellé) ou None."""
     try:
-        q = urllib.parse.quote(adresse.strip())
+        q = urllib.parse.quote(terme.strip())
         url = (f"https://geocoding-api.open-meteo.com/v1/search?name={q}"
                f"&count=1&language=fr&format=json")
         data = _fetch_json(url)
@@ -63,8 +61,38 @@ def geocode(adresse):
         lieu = ', '.join(filter(None, [r.get('name'), r.get('admin1'), r.get('country')]))
         return (r['latitude'], r['longitude'], lieu)
     except Exception as e:
-        current_app.logger.info(f"Géocodage météo échoué: {e}")
+        current_app.logger.info(f"Géocodage '{terme}' échoué: {e}")
         return None
+
+
+def geocode(adresse):
+    """Adresse -> (lat, lon, libellé). Tolérant : si l'adresse complète échoue,
+    on réessaie segment par segment (séparés par virgule ou espace), du plus
+    précis au moins précis (ex: 'Abidjan Abobo' -> 'Abidjan' -> 'Abobo')."""
+    if not adresse or not adresse.strip():
+        return None
+
+    candidats = []
+    adresse = adresse.strip()
+    candidats.append(adresse)  # 1) adresse complète
+
+    # 2) segments séparés par virgule (ex: "Cocody, Abidjan")
+    for part in adresse.split(','):
+        p = part.strip()
+        if p and p not in candidats:
+            candidats.append(p)
+
+    # 3) mots individuels d'au moins 3 lettres (ex: "Abidjan", "Abobo")
+    for mot in adresse.replace(',', ' ').split():
+        m = mot.strip()
+        if len(m) >= 3 and m not in candidats:
+            candidats.append(m)
+
+    for terme in candidats:
+        res = _geocode_one(terme)
+        if res:
+            return res
+    return None
 
 
 def get_weather(adresse):
