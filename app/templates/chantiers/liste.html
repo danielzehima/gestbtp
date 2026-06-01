@@ -8,31 +8,28 @@
   {% endif %}
 </div>
 
-<form method="get" class="card p-3 mb-4">
+<div class="card p-3 mb-4">
   <div class="d-flex flex-nowrap align-items-center gap-2 overflow-auto">
-    <input type="text" name="q" value="{{ q }}" placeholder="Rechercher nom ou référence..."
+    <input type="text" data-live-search="#tableChantiers tbody tr"
+           placeholder="🔍 Rechercher nom, référence ou client..."
            class="form-control flex-grow-1" style="min-width:220px;">
-    <select name="statut" class="form-select" style="width:180px; flex:0 0 auto;">
+    <select data-live-filter="#tableChantiers tbody tr" data-filter-attr="data-statut"
+            class="form-select" style="width:180px; flex:0 0 auto;">
       <option value="">Tous les statuts</option>
-      <option value="preparation" {% if statut=='preparation' %}selected{% endif %}>Préparation</option>
-      <option value="en_cours" {% if statut=='en_cours' %}selected{% endif %}>En cours</option>
-      <option value="suspendu" {% if statut=='suspendu' %}selected{% endif %}>Suspendu</option>
-      <option value="termine" {% if statut=='termine' %}selected{% endif %}>Terminé</option>
+      <option value="preparation">Préparation</option>
+      <option value="en_cours">En cours</option>
+      <option value="suspendu">Suspendu</option>
+      <option value="termine">Terminé</option>
     </select>
-    <button type="submit" class="btn btn-dark text-nowrap" style="flex:0 0 auto;">
-      <i class="fas fa-filter"></i> Filtrer
-    </button>
-    <a href="{{ url_for('chantiers.liste') }}" class="btn btn-outline-secondary text-nowrap" style="flex:0 0 auto;">
-      <i class="fas fa-rotate-left"></i> Reset
-    </a>
   </div>
-</form>
+</div>
 
-<table class="data">
+<table class="data" id="tableChantiers">
   <thead><tr><th>Réf.</th><th>Nom</th><th>Client</th><th>Statut</th><th>Avancement</th><th>Actions</th></tr></thead>
   <tbody>
     {% for c in chantiers %}
-    <tr>
+    <tr data-statut="{{ c.statut.value }}"
+        data-search="{{ c.reference }} {{ c.nom }} {{ c.client.nom if c.client else '' }}">
       <td><strong>{{ c.reference }}</strong></td>
       <td>{{ c.nom }}</td>
       <td>{{ c.client.nom if c.client else '—' }}</td>
@@ -68,4 +65,7 @@
     {% endfor %}
   </tbody>
 </table>
+<div data-live-empty="#tableChantiers tbody tr" class="card" style="display:none;text-align:center;color:var(--text-muted);padding:24px">
+  Aucun résultat ne correspond à votre recherche.
+</div>
 {% endblock %}

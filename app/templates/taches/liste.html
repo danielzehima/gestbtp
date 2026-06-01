@@ -10,6 +10,12 @@
 <p class="page-subtitle"><i class="fas fa-hand-pointer"></i> Glissez-déposez les cartes pour changer leur statut</p>
 {% endif %}
 
+<div class="card p-3 mb-4">
+  <input type="text" data-live-search=".kanban-card"
+         placeholder="🔍 Rechercher une tâche, un chantier, un responsable..."
+         class="form-control">
+</div>
+
 <div class="kanban">
   {% set labels = {'a_faire':'À faire','en_cours':'En cours','termine':'Terminé','bloque':'Bloqué'} %}
   {% for statut, taches_col in kanban.items() %}
@@ -18,7 +24,8 @@
     <div class="kanban-list" data-statut="{{ statut.value }}">
       {% for t in taches_col %}
       <div class="kanban-card {{ 'crit' if t.priorite.value=='critique' else ('haute' if t.priorite.value=='haute' else '') }}"
-           data-id="{{ t.id }}">
+           data-id="{{ t.id }}"
+           data-search="{{ t.titre }} {{ t.chantier.reference }} {{ t.responsable.nom if t.responsable else '' }} {{ t.priorite.value }}">
         <strong>{{ t.titre }}</strong><br>
         <small style="color:var(--text-muted)">{{ t.chantier.reference }}</small><br>
         <span class="badge badge-{{ t.priorite.value }}">{{ t.priorite.value }}</span>
