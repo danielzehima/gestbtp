@@ -26,36 +26,68 @@
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
   const el = document.getElementById('calendar');
+
+  // On charge d'abord les événements pour savoir sur quel mois s'ouvrir
+  let evts = [];
+  try {
+    const r = await fetch("{{ url_for('planning.events') }}");
+    evts = await r.json();
+  } catch (e) {}
+
+  // Date d'ouverture : aujourd'hui, sauf s'il n'y a aucun événement ce mois-ci
+  // -> on ouvre alors sur le 1er événement à venir (ou le plus proche).
+  let initialDate = new Date();
+  if (evts.length) {
+    const now = new Date();
+    const monthStr = now.toISOString().slice(0, 7);
+    const hasThisMonth = evts.some(e => (e.start || '').slice(0, 7) === monthStr);
+    if (!hasThisMonth) {
+      // event dont la date est la plus proche dans le futur, sinon le 1er
+      const futurs = evts.filter(e => new Date(e.start) >= now).sort((a,b)=>new Date(a.start)-new Date(b.start));
+      initialDate = new Date((futurs[0] || evts[0]).start);
+    }
+  }
+
   const calendar = new FullCalendar.Calendar(el, {
     initialView: 'dayGridMonth',
+    initialDate: initialDate,
     locale: 'fr',
     firstDay: 1,
     height: 'auto',
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,listMonth'
+      right: 'dayGridMonth,listMonth'
     },
-    buttonText: { today: "Aujourd'hui", month: 'Mois', week: 'Semaine', list: 'Liste' },
-    events: "{{ url_for('planning.events') }}",
+    buttonText: { today: "Aujourd'hui", month: 'Mois', list: 'Liste' },
+    events: evts,
     eventDisplay: 'block',
     dayMaxEvents: 3,
+    noEventsContent: 'Aucun chantier ou tâche planifié',
     eventClick: function (info) {
-      // Les chantiers ont une URL -> navigation; les tâches montrent un détail
-      if (info.event.url) return; // laisse FullCalendar suivre l'URL
+      if (info.event.url) return;
       const p = info.event.extendedProps;
       if (p.type === 'tache') {
         info.jsEvent.preventDefault();
         window.toast(`${info.event.title} — chantier ${p.chantier} (${p.priorite})`, 'info');
       }
     },
-    eventDidMount: function (info) {
-      info.el.style.cursor = 'pointer';
-    }
+    eventDidMount: function (info) { info.el.style.cursor = 'pointer'; }
   });
   calendar.render();
+
+  // Bandeau d'aide si AUCUN événement (dates manquantes)
+  if (!evts.length) {
+    const hint = document.createElement('div');
+    hint.className = 'flash flash-info';
+    hint.style.marginTop = '12px';
+    hint.innerHTML = '<i class="fas fa-info-circle"></i> Aucun chantier ou tâche à afficher. ' +
+      'Le planning affiche les chantiers ayant une <strong>date de début</strong> ' +
+      'et les tâches ayant une <strong>date limite</strong>.';
+    el.parentNode.appendChild(hint);
+  }
 });
 </script>
 <style>
