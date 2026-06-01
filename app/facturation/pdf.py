@@ -1,13 +1,27 @@
 """Génération PDF des devis et factures BTP (ReportLab)."""
+import urllib.request
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle)
+from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table,
+                                TableStyle, Image)
 
 PRIMARY = colors.HexColor('#FF6B00')
 DARK = colors.HexColor('#111111')
+
+
+def _fetch_logo(url):
+    """Télécharge le logo de l'entreprise pour l'intégrer au PDF. None si échec."""
+    if not url:
+        return None
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            return BytesIO(r.read())
+    except Exception:
+        return None
 
 
 def _fmt(n):
@@ -26,14 +40,44 @@ def document_pdf(doc, entreprise):
 
     titre = "DEVIS" if doc.type.value == 'devis' else "FACTURE"
 
-    # En-tête : entreprise (gauche) / titre + numéro (droite)
-    ent_nom = entreprise.nom if entreprise else "Entreprise"
+    # En-tête : identité de l'entreprise (logo + coordonnées) à gauche,
+    # titre + numéro à droite.
+    ent_nom = (getattr(entreprise, 'raison_sociale', None) or
+               (entreprise.nom if entreprise else "Entreprise"))
+    coord = []
+    if entreprise:
+        if entreprise.adresse:
+            coord.append(entreprise.adresse)
+        ligne2 = ' · '.join(filter(None, [entreprise.telephone, entreprise.email]))
+        if ligne2:
+            coord.append(ligne2)
+        if entreprise.site_web:
+            coord.append(entreprise.site_web)
+    coord_html = '<br/>'.join(coord)
+
+    # Bloc texte entreprise
+    ent_par = Paragraph(
+        f"<b><font size=14>{ent_nom}</font></b>" +
+        (f"<br/><font size=8 color='grey'>{coord_html}</font>" if coord_html else ""),
+        s['Normal'])
+
+    # Logo (si dispo) au-dessus / à gauche du nom
+    logo_buf = _fetch_logo(getattr(entreprise, 'logo_url', None))
+    if logo_buf:
+        try:
+            img = Image(logo_buf, width=3*cm, height=2*cm, kind='proportional')
+            left_cell = [img, Spacer(1, 0.2*cm), ent_par]
+        except Exception:
+            left_cell = ent_par
+    else:
+        left_cell = ent_par
+
     head = [[
-        Paragraph(f"<b>{ent_nom}</b>", s['Normal']),
+        left_cell,
         Paragraph(f"<b><font size=22 color='#FF6B00'>{titre}</font></b><br/>"
                   f"<font size=11>N° {doc.numero}</font>", s['Right']),
     ]]
-    t = Table(head, colWidths=[9*cm, 7*cm])
+    t = Table(head, colWidths=[10*cm, 6*cm])
     t.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
     story.append(t)
     story.append(Spacer(1, 0.6*cm))

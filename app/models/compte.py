@@ -29,6 +29,14 @@ class Compte(db.Model):
     est_abonne = db.Column(db.Boolean, default=False)        # a payé au moins une fois
     date_fin_essai = db.Column(db.DateTime)                  # fin de l'essai gratuit (None = jamais d'essai)
 
+    # ===== Identité entreprise (en-tête des devis/factures) =====
+    logo_url = db.Column(db.String(500))         # logo de l'entreprise (Supabase Storage)
+    raison_sociale = db.Column(db.String(200))   # nom commercial affiché sur les documents
+    adresse = db.Column(db.String(300))
+    telephone = db.Column(db.String(40))
+    email = db.Column(db.String(120))
+    site_web = db.Column(db.String(120))
+
     # Membres de l'entreprise (équipe)
     membres = db.relationship(
         'User', backref='compte', lazy='dynamic',

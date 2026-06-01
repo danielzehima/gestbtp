@@ -58,6 +58,7 @@ def create_app(config_name='development'):
     from app.admin.routes import admin_bp
     from app.planning.routes import planning_bp
     from app.facturation.routes import facturation_bp
+    from app.entreprise.routes import entreprise_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp)
@@ -71,6 +72,8 @@ def create_app(config_name='development'):
     app.register_blueprint(admin_bp)
     app.register_blueprint(planning_bp)
     app.register_blueprint(facturation_bp)
+    csrf.exempt(entreprise_bp)
+    app.register_blueprint(entreprise_bp)
 
     # Blueprints API REST (CSRF désactivé pour API JWT)
     from app.api.auth_api import auth_api

@@ -31,6 +31,7 @@
       <a href="{{ url_for('taches.liste') }}" class="{{ 'active' if 'taches' in (request.endpoint or '') }}"><i class="fas fa-check-square"></i> Tâches</a>
       <a href="{{ url_for('photos.index') }}" class="{{ 'active' if 'photos' in (request.endpoint or '') }}"><i class="fas fa-images"></i> Photos</a>
       {% if current_user.role.value != 'admin' %}
+      <a href="{{ url_for('entreprise.parametres') }}" class="{{ 'active' if 'entreprise' in (request.endpoint or '') }}"><i class="fas fa-store"></i> Mon entreprise</a>
       <a href="{{ url_for('team.index') }}" class="{{ 'active' if 'team' in (request.endpoint or '') }}"><i class="fas fa-users"></i> Mon équipe</a>
       <a href="{{ url_for('billing.index') }}" class="{{ 'active' if 'billing' in (request.endpoint or '') }}"><i class="fas fa-credit-card"></i> Mon abonnement</a>
       {% else %}

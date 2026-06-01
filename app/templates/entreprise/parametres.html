@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Mon entreprise - GESTBTP{% endblock %}
+{% block content %}
+<h1 class="page-title">Mon entreprise</h1>
+<p class="page-subtitle">Ces informations apparaissent en en-tête de vos devis et factures</p>
+
+{% if not owner %}
+<div class="flash flash-info">Seul le propriétaire de l'entreprise peut modifier ces paramètres.</div>
+{% endif %}
+
+<div class="row g-3">
+  <!-- Logo -->
+  <div class="col-lg-4">
+    <div class="card" style="text-align:center">
+      <div class="card-header"><h2 style="font-size:16px;margin:0">Logo</h2></div>
+      <div id="logoPreview" style="min-height:120px;display:flex;align-items:center;justify-content:center;background:var(--bg-soft);border-radius:10px;margin-bottom:12px">
+        {% if compte.logo_url %}
+          <img src="{{ compte.logo_url }}" alt="Logo" style="max-height:120px;max-width:100%">
+        {% else %}
+          <span style="color:var(--text-muted)"><i class="fas fa-image" style="font-size:32px;opacity:.4"></i><br>Aucun logo</span>
+        {% endif %}
+      </div>
+      {% if owner %}
+      <input type="file" id="logoFile" class="form-control" accept="image/png,image/jpeg,image/webp">
+      <button type="button" id="logoUploadBtn" class="btn btn-primary btn-sm" style="margin-top:10px;width:100%;justify-content:center">
+        <i class="fas fa-upload"></i> Uploader le logo
+      </button>
+      <div id="logoMsg" style="margin-top:8px;font-size:13px"></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Coordonnées -->
+  <div class="col-lg-8">
+    <div class="card">
+      <form method="post" id="entrepriseForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="logo_url" id="logoUrlField" value="{{ compte.logo_url or '' }}">
+        <div class="form-group">
+          <label>Raison sociale / Nom commercial</label>
+          <input name="raison_sociale" class="form-control" value="{{ compte.raison_sociale or compte.nom }}" {{ '' if owner else 'disabled' }}>
+        </div>
+        <div class="form-group">
+          <label>Adresse</label>
+          <input name="adresse" class="form-control" value="{{ compte.adresse or '' }}" {{ '' if owner else 'disabled' }}>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Téléphone</label>
+            <input name="telephone" class="form-control" value="{{ compte.telephone or '' }}" {{ '' if owner else 'disabled' }}>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input name="email" type="email" class="form-control" value="{{ compte.email or '' }}" {{ '' if owner else 'disabled' }}>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Site web</label>
+          <input name="site_web" class="form-control" value="{{ compte.site_web or '' }}" {{ '' if owner else 'disabled' }}>
+        </div>
+        {% if owner %}
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Enregistrer</button>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+
+{% if owner %}
+<script>
+const btn = document.getElementById('logoUploadBtn');
+const fileInput = document.getElementById('logoFile');
+const msg = document.getElementById('logoMsg');
+const CSRF = "{{ csrf_token() }}";
+
+btn.addEventListener('click', async () => {
+  const f = fileInput.files[0];
+  if (!f) { msg.innerHTML = '<span style="color:var(--danger)">Choisissez une image.</span>'; return; }
+  btn.disabled = true; msg.textContent = 'Envoi…';
+  try {
+    const sr = await fetch("{{ url_for('entreprise.sign_logo_upload') }}", {
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+      body: JSON.stringify({filename: f.name})
+    });
+    const sign = await sr.json();
+    if (!sign.ok) throw new Error(sign.error);
+    // upload direct vers Supabase
+    await fetch(sign.upload_url, { method:'PUT', headers:{'Content-Type': f.type}, body: f });
+    // enregistrer l'URL + aperçu
+    document.getElementById('logoUrlField').value = sign.public_url;
+    document.getElementById('logoPreview').innerHTML =
+      '<img src="'+sign.public_url+'" style="max-height:120px;max-width:100%">';
+    msg.innerHTML = '<span style="color:var(--success)">✓ Logo prêt. Cliquez sur « Enregistrer » pour valider.</span>';
+  } catch(e) {
+    msg.innerHTML = '<span style="color:var(--danger)">Échec : '+e.message+'</span>';
+  } finally { btn.disabled = false; }
+});
+</script>
+{% endif %}
+{% endblock %}

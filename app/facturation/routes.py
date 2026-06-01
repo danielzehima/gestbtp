@@ -194,7 +194,8 @@ def supprimer(id):
 def pdf(id):
     doc = _get_doc_or_404(id)
     from app.facturation.pdf import document_pdf
-    buf = document_pdf(doc, get_compte(current_user) or doc.compte)
+    # L'en-tête du PDF utilise TOUJOURS l'identité de l'entreprise propriétaire du document
+    buf = document_pdf(doc, doc.compte)
     return send_file(buf, mimetype='application/pdf', as_attachment=True,
                      download_name=f"{doc.numero}.pdf")
 
