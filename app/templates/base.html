@@ -47,14 +47,22 @@
       </div>
     </header>
     <main class="content">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for cat, msg in messages %}
-          <div class="flash flash-{{ cat }}">{{ msg }}</div>
-        {% endfor %}
-      {% endwith %}
       {% block content %}{% endblock %}
     </main>
   </div>
+</div>
+
+<!-- Conteneur de toasts (notifications glissantes) -->
+<div id="toastStack" class="toast-stack">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="toast-item toast-{{ cat }}" role="status">
+        <i class="fas fa-{{ 'check-circle' if cat=='success' else ('exclamation-circle' if cat in ['danger','warning'] else 'info-circle') }}"></i>
+        <span>{{ msg }}</span>
+        <button class="toast-close" aria-label="Fermer">&times;</button>
+      </div>
+    {% endfor %}
+  {% endwith %}
 </div>
 {% else %}
   {% block auth %}{% endblock %}

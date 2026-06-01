@@ -29,15 +29,26 @@
 </form>
 
 <table class="data">
-  <thead><tr><th>Réf.</th><th>Nom</th><th>Client</th><th>Statut</th><th>Date début</th><th>Actions</th></tr></thead>
+  <thead><tr><th>Réf.</th><th>Nom</th><th>Client</th><th>Statut</th><th>Avancement</th><th>Actions</th></tr></thead>
   <tbody>
     {% for c in chantiers %}
     <tr>
       <td><strong>{{ c.reference }}</strong></td>
       <td>{{ c.nom }}</td>
       <td>{{ c.client.nom if c.client else '—' }}</td>
-      <td><span class="badge badge-{{ c.statut.value }}">{{ c.statut.value }}</span></td>
-      <td>{{ c.date_debut.strftime('%d/%m/%Y') if c.date_debut else '—' }}</td>
+      <td>
+        {% if c.statut.value == 'en_cours' %}
+          <span class="badge badge-en_cours badge-pulse">{{ c.statut.value }}</span>
+        {% else %}
+          <span class="badge badge-{{ c.statut.value }}">{{ c.statut.value }}</span>
+        {% endif %}
+      </td>
+      <td style="min-width:140px">
+        <div class="progress-head"><span>{{ c.avancement }}%</span></div>
+        <div class="progress-track">
+          <div class="progress-fill {{ 'done' if c.avancement >= 100 }}" data-pct="{{ c.avancement }}"></div>
+        </div>
+      </td>
       <td>
         <a href="{{ url_for('chantiers.detail', id=c.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></a>
         {% if current_user.role.value in ['admin','conducteur'] %}

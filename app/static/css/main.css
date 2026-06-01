@@ -267,6 +267,67 @@ textarea { min-height: 90px; resize: vertical; }
 }
 .tabs a.active { color: var(--primary); border-bottom-color: var(--primary); }
 
+/* ============ Toasts (notifications glissantes) ============ */
+.toast-stack {
+  position: fixed; top: 78px; right: 20px; z-index: 3000;
+  display: flex; flex-direction: column; gap: 10px; max-width: 360px;
+}
+.toast-item {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; padding: 14px 16px; border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15); border-left: 4px solid var(--primary);
+  font-weight: 500; font-size: 14px;
+  animation: toastIn .4s cubic-bezier(.2,.8,.3,1) forwards;
+}
+.toast-item.hide { animation: toastOut .35s forwards; }
+.toast-item i { font-size: 18px; }
+.toast-success { border-left-color: var(--success); }
+.toast-success i { color: var(--success); }
+.toast-danger { border-left-color: var(--danger); }
+.toast-danger i { color: var(--danger); }
+.toast-warning { border-left-color: var(--warning); }
+.toast-warning i { color: var(--warning); }
+.toast-info { border-left-color: var(--info); }
+.toast-info i { color: var(--info); }
+.toast-close {
+  margin-left: auto; background: none; border: none; font-size: 20px;
+  color: #999; cursor: pointer; line-height: 1; padding: 0 2px;
+}
+.toast-close:hover { color: var(--dark); }
+@keyframes toastIn { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(60px); height: 0; padding: 0; margin: 0; } }
+
+/* ============ Barre de progression chantier ============ */
+.progress-wrap { margin-top: 10px; }
+.progress-head { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.progress-track { height: 8px; background: #EFEFEF; border-radius: 999px; overflow: hidden; }
+.progress-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), #FF9248);
+  width: 0; transition: width 1s cubic-bezier(.2,.8,.3,1);
+}
+.progress-fill.done { background: linear-gradient(90deg, #16A34A, #34D399); }
+
+/* ============ Badge avec point pulsant (En cours) ============ */
+.badge-pulse::before {
+  content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor; margin-right: 6px; vertical-align: middle;
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(22,163,74,.5); }
+  70% { box-shadow: 0 0 0 6px rgba(22,163,74,0); }
+  100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
+}
+
+/* ============ Transitions & entrée de contenu ============ */
+.content { animation: contentIn .35s ease; }
+@keyframes contentIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.card { transition: box-shadow .2s, transform .2s; }
+table.data tbody tr { transition: background .15s; }
+.btn { transition: transform .12s, box-shadow .15s, background .15s; }
+.btn:active { transform: scale(.97); }
+
 /* ============ Mobile ============ */
 .menu-toggle { display: none; background: none; border: none; font-size: 22px; cursor: pointer; }
 @media (max-width: 900px) {

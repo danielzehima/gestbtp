@@ -9,7 +9,24 @@
     <a href="{{ url_for('pdf.chantier', id=chantier.id) }}" class="btn btn-dark"><i class="fas fa-file-pdf"></i> PDF</a>
   </div>
 </div>
-<p class="page-subtitle">{{ chantier.reference }} — <span class="badge badge-{{ chantier.statut.value }}">{{ chantier.statut.value }}</span></p>
+<p class="page-subtitle">{{ chantier.reference }} —
+  {% if chantier.statut.value == 'en_cours' %}
+    <span class="badge badge-en_cours badge-pulse">{{ chantier.statut.value }}</span>
+  {% else %}
+    <span class="badge badge-{{ chantier.statut.value }}">{{ chantier.statut.value }}</span>
+  {% endif %}
+</p>
+
+<div class="card" style="padding:16px 20px">
+  <div class="progress-head">
+    <span><strong>Avancement du chantier</strong></span>
+    <span><strong>{{ chantier.avancement }}%</strong></span>
+  </div>
+  <div class="progress-track" style="height:12px">
+    <div class="progress-fill {{ 'done' if chantier.avancement >= 100 }}" data-pct="{{ chantier.avancement }}"></div>
+  </div>
+  <small style="color:var(--text-muted)">Basé sur les tâches terminées</small>
+</div>
 
 <div class="tabs">
   <a href="#" class="active" onclick="showTab('infos',event)">Infos</a>

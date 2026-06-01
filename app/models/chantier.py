@@ -34,6 +34,19 @@ class Chantier(db.Model):
     taches = db.relationship('Tache', backref='chantier', lazy='dynamic', cascade='all, delete-orphan')
     photos = db.relationship('Photo', backref='chantier', lazy='dynamic', cascade='all, delete-orphan')
 
+    @property
+    def avancement(self):
+        """% de tâches terminées (0 si aucune tâche). Si le chantier est
+        marqué Terminé, on considère 100%."""
+        from app.models.tache import StatutTache
+        if self.statut == StatutChantier.TERMINE:
+            return 100
+        total = self.taches.count()
+        if not total:
+            return 0
+        finies = self.taches.filter_by(statut=StatutTache.TERMINE).count()
+        return round(finies / total * 100)
+
     def to_dict(self):
         return {
             'id': self.id, 'nom': self.nom, 'reference': self.reference,
