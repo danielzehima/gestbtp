@@ -14,16 +14,34 @@
         🎁 Essai gratuit de <strong>14 jours</strong> — aucune carte requise.
       </div>
     {% endif %}
+    {# Erreur métier (ex: email déjà utilisé) #}
+    {% if erreur %}
+      <div class="flash flash-danger" style="font-size:13px">{{ erreur }}</div>
+    {% endif %}
+
+    {# Erreurs de validation du formulaire #}
+    {% set has_errors = form.errors %}
+    {% if has_errors %}
+      <div class="flash flash-danger" style="font-size:13px">
+        Veuillez corriger les points suivants :
+        <ul style="margin:6px 0 0 16px;padding:0">
+          {% for field, errs in form.errors.items() %}
+            {% for e in errs %}<li>{{ form[field].label.text }} : {{ e }}</li>{% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
     <form method="post" action="{{ url_for('auth.register', plan=plan) }}">
       {{ form.hidden_tag() }}
       <input type="hidden" name="plan" value="{{ plan }}">
 
-
-      <div class="form-group">{{ form.nom.label }} {{ form.nom() }}</div>
-      <div class="form-group">{{ form.email.label }} {{ form.email() }}</div>
-      <div class="form-group">{{ form.telephone.label }} {{ form.telephone() }}</div>
+      <div class="form-group">{{ form.nom.label }} {{ form.nom(value=form.nom.data or '') }}</div>
+      <div class="form-group">{{ form.email.label }} {{ form.email(value=form.email.data or '') }}</div>
+      <div class="form-group">{{ form.telephone.label }} {{ form.telephone(value=form.telephone.data or '') }}</div>
       <div class="form-group">{{ form.role.label }} {{ form.role() }}</div>
-      <div class="form-group">{{ form.password.label }} {{ form.password() }}</div>
+      <div class="form-group">{{ form.password.label }} {{ form.password() }}
+        <small style="color:var(--text-muted)">8 caractères minimum</small></div>
       <div class="form-group">{{ form.confirm.label }} {{ form.confirm() }}</div>
       {{ form.submit(class="btn btn-primary", style="width:100%;justify-content:center") }}
     </form>

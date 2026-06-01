@@ -34,8 +34,8 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         if User.query.filter_by(email=form.email.data.lower()).first():
-            flash("Email déjà utilisé.", 'danger')
-            return render_template('auth/register.html', form=form, plan=plan)
+            return render_template('auth/register.html', form=form, plan=plan,
+                                   erreur="Cet email est déjà utilisé. Connectez-vous ou utilisez une autre adresse.")
         user = User(
             nom=form.nom.data, email=form.email.data.lower(),
             telephone=form.telephone.data, role=RoleEnum(form.role.data),
