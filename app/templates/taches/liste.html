@@ -1,36 +1,96 @@
 {% extends 'base.html' %}
 {% block content %}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
   <h1 class="page-title" style="margin:0">Tâches</h1>
   {% if current_user.role.value in ['admin','conducteur'] %}
     <a href="{{ url_for('taches.nouveau') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Nouvelle tâche</a>
   {% endif %}
 </div>
+{% if current_user.role.value in ['admin','conducteur'] %}
+<p class="page-subtitle"><i class="fas fa-hand-pointer"></i> Glissez-déposez les cartes pour changer leur statut</p>
+{% endif %}
 
 <div class="kanban">
   {% set labels = {'a_faire':'À faire','en_cours':'En cours','termine':'Terminé','bloque':'Bloqué'} %}
   {% for statut, taches_col in kanban.items() %}
-  <div class="kanban-col">
-    <h3>{{ labels[statut.value] }} ({{ taches_col|length }})</h3>
-    {% for t in taches_col %}
-    <div class="kanban-card {{ 'crit' if t.priorite.value=='critique' else ('haute' if t.priorite.value=='haute' else '') }}">
-      <strong>{{ t.titre }}</strong><br>
-      <small style="color:var(--text-muted)">{{ t.chantier.reference }}</small><br>
-      <span class="badge badge-{{ t.priorite.value }}">{{ t.priorite.value }}</span>
-      {% if t.date_limite %}<br><small>📅 {{ t.date_limite.strftime('%d/%m/%Y') }}</small>{% endif %}
-      {% if t.responsable %}<br><small>👤 {{ t.responsable.nom }}</small>{% endif %}
-      <div style="margin-top:6px">
+  <div class="kanban-col" data-statut="{{ statut.value }}">
+    <h3>{{ labels[statut.value] }} <span class="kanban-count">{{ taches_col|length }}</span></h3>
+    <div class="kanban-list" data-statut="{{ statut.value }}">
+      {% for t in taches_col %}
+      <div class="kanban-card {{ 'crit' if t.priorite.value=='critique' else ('haute' if t.priorite.value=='haute' else '') }}"
+           data-id="{{ t.id }}">
+        <strong>{{ t.titre }}</strong><br>
+        <small style="color:var(--text-muted)">{{ t.chantier.reference }}</small><br>
+        <span class="badge badge-{{ t.priorite.value }}">{{ t.priorite.value }}</span>
+        {% if t.date_limite %}<br><small>📅 {{ t.date_limite.strftime('%d/%m/%Y') }}</small>{% endif %}
+        {% if t.responsable %}<br><small>👤 {{ t.responsable.nom }}</small>{% endif %}
         {% if current_user.role.value in ['admin','conducteur'] %}
-        <a href="{{ url_for('taches.modifier', id=t.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i></a>
-        <form method="post" action="{{ url_for('taches.supprimer', id=t.id) }}" data-confirm="Supprimer ?" style="display:inline">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-        </form>
+        <div style="margin-top:6px">
+          <a href="{{ url_for('taches.modifier', id=t.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i></a>
+          <form method="post" action="{{ url_for('taches.supprimer', id=t.id) }}" data-confirm="Supprimer ?" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+          </form>
+        </div>
         {% endif %}
       </div>
+      {% endfor %}
     </div>
-    {% endfor %}
   </div>
   {% endfor %}
 </div>
+
+{% if current_user.role.value in ['admin','conducteur'] %}
+<div id="kanbanToast" class="kanban-toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+const CSRF = "{{ csrf_token() }}";
+const labels = {a_faire:'À faire', en_cours:'En cours', termine:'Terminé', bloque:'Bloqué'};
+
+function toast(msg, ok=true) {
+  const t = document.getElementById('kanbanToast');
+  t.textContent = msg;
+  t.className = 'kanban-toast show ' + (ok ? 'ok' : 'err');
+  setTimeout(() => t.className = 'kanban-toast', 2200);
+}
+
+function refreshCounts() {
+  document.querySelectorAll('.kanban-col').forEach(col => {
+    const n = col.querySelectorAll('.kanban-card').length;
+    col.querySelector('.kanban-count').textContent = n;
+  });
+}
+
+document.querySelectorAll('.kanban-list').forEach(list => {
+  new Sortable(list, {
+    group: 'taches',
+    animation: 180,
+    ghostClass: 'kanban-ghost',
+    dragClass: 'kanban-drag',
+    onEnd: async (evt) => {
+      const card = evt.item;
+      const newStatut = evt.to.dataset.statut;
+      const oldStatut = evt.from.dataset.statut;
+      if (newStatut === oldStatut) { refreshCounts(); return; }
+      const id = card.dataset.id;
+      try {
+        const r = await fetch(`/taches/${id}/statut`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json', 'X-CSRFToken': CSRF},
+          body: JSON.stringify({statut: newStatut})
+        });
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.error || 'Erreur');
+        toast(`Tâche déplacée vers « ${labels[newStatut]} »`);
+      } catch (e) {
+        // rollback visuel
+        evt.from.insertBefore(card, evt.from.children[evt.oldIndex] || null);
+        toast("Échec du déplacement", false);
+      }
+      refreshCounts();
+    }
+  });
+});
+</script>
+{% endif %}
 {% endblock %}

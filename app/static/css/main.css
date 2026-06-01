@@ -220,6 +220,28 @@ textarea { min-height: 90px; resize: vertical; }
 .kanban-card.crit { border-left-color: var(--danger); }
 .kanban-card.haute { border-left-color: var(--warning); }
 
+/* ---- Drag & drop ---- */
+.kanban-list { min-height: 60px; }
+.kanban-card { cursor: grab; transition: box-shadow .15s, transform .15s; }
+.kanban-card:active { cursor: grabbing; }
+.kanban-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.1); transform: translateY(-1px); }
+.kanban-ghost { opacity: .4; background: #FFE4D1; }
+.kanban-drag { transform: rotate(2deg); box-shadow: 0 12px 30px rgba(0,0,0,.2); }
+.kanban-count {
+  display: inline-block; min-width: 22px; padding: 1px 7px; border-radius: 999px;
+  background: var(--primary); color: #fff; font-size: 12px; text-align: center;
+}
+/* Toast Kanban */
+.kanban-toast {
+  position: fixed; top: 80px; right: 24px; z-index: 2000;
+  background: var(--dark); color: #fff; padding: 12px 18px; border-radius: 10px;
+  font-weight: 600; font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  opacity: 0; transform: translateX(40px); transition: all .3s; pointer-events: none;
+}
+.kanban-toast.show { opacity: 1; transform: translateX(0); }
+.kanban-toast.ok { background: #16A34A; }
+.kanban-toast.err { background: var(--danger); }
+
 /* ============ Galerie photos ============ */
 .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
 .gallery .photo {

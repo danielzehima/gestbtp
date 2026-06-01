@@ -7,32 +7,66 @@
 <div class="stats-grid">
   <div class="stat-card">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
-      <div><div class="label">Total Chantiers</div><div class="value">{{ stats.total }}</div></div>
+      <div><div class="label">Total Chantiers</div><div class="value" data-count="{{ stats.total }}">0</div></div>
       <div class="icon"><i class="fas fa-hard-hat"></i></div>
     </div>
   </div>
   <div class="stat-card success">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
-      <div><div class="label">Actifs</div><div class="value">{{ stats.actifs }}</div></div>
+      <div><div class="label">Actifs</div><div class="value" data-count="{{ stats.actifs }}">0</div></div>
       <div class="icon"><i class="fas fa-play"></i></div>
     </div>
   </div>
   <div class="stat-card">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
-      <div><div class="label">Terminés</div><div class="value">{{ stats.termines }}</div></div>
+      <div><div class="label">Terminés</div><div class="value" data-count="{{ stats.termines }}">0</div></div>
       <div class="icon"><i class="fas fa-check"></i></div>
     </div>
   </div>
   <div class="stat-card">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
-      <div><div class="label">Rapports</div><div class="value">{{ stats.rapports }}</div></div>
+      <div><div class="label">Rapports</div><div class="value" data-count="{{ stats.rapports }}">0</div></div>
       <div class="icon"><i class="fas fa-clipboard"></i></div>
     </div>
   </div>
   <div class="stat-card danger">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
-      <div><div class="label">Tâches en retard</div><div class="value">{{ stats.retard }}</div></div>
+      <div><div class="label">Tâches en retard</div><div class="value" data-count="{{ stats.retard }}">0</div></div>
       <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Graphiques ============ -->
+<div class="row g-3" style="margin-bottom:4px">
+  <div class="col-lg-4 col-md-6">
+    <div class="card" style="height:100%">
+      <div class="card-header"><h2 style="font-size:16px;margin:0">Chantiers par statut</h2></div>
+      <div style="position:relative;height:240px"><canvas id="chartChantiers"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-4 col-md-6">
+    <div class="card" style="height:100%">
+      <div class="card-header"><h2 style="font-size:16px;margin:0">Tâches par statut</h2></div>
+      <div style="position:relative;height:240px"><canvas id="chartTaches"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-4 col-md-12">
+    <div class="card" style="height:100%">
+      <div class="card-header"><h2 style="font-size:16px;margin:0">Avancement global</h2></div>
+      <div style="position:relative;height:240px;display:flex;align-items:center;justify-content:center">
+        <canvas id="chartAvancement"></canvas>
+        <div id="avancementLabel" style="position:absolute;font-size:34px;font-weight:800;color:var(--dark)">0%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3" style="margin-bottom:20px">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header"><h2 style="font-size:16px;margin:0">Activité des 30 derniers jours</h2></div>
+      <div style="position:relative;height:260px"><canvas id="chartActivite"></canvas></div>
     </div>
   </div>
 </div>
@@ -62,4 +96,88 @@
     </div>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+// ===== Animation compteurs (les chiffres montent de 0 à leur valeur) =====
+document.querySelectorAll('.stat-card .value[data-count]').forEach(el => {
+  const target = parseInt(el.dataset.count) || 0;
+  if (target === 0) { el.textContent = '0'; return; }
+  const dur = 900, t0 = performance.now();
+  function tick(now) {
+    const p = Math.min((now - t0) / dur, 1);
+    el.textContent = Math.round(p * target);
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+});
+
+// ===== Graphiques =====
+const ORANGE = '#FF6B00', DARK = '#111111';
+const COLORS = ['#FFB380', '#FF6B00', '#FBBF24', '#3B82F6', '#16A34A', '#DC2626'];
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+
+fetch("{{ url_for('dashboard.stats_json') }}")
+  .then(r => r.json())
+  .then(d => {
+    // Donut chantiers
+    const cs = d.chantiers_statut;
+    new Chart(document.getElementById('chartChantiers'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Préparation', 'En cours', 'Suspendu', 'Terminé'],
+        datasets: [{ data: [cs.preparation, cs.en_cours, cs.suspendu, cs.termine],
+          backgroundColor: ['#FBBF24', '#16A34A', '#F59E0B', '#3B82F6'], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: { legend: { position: 'bottom' } }, animation: { animateScale: true } }
+    });
+
+    // Barres tâches par statut
+    const ts = d.taches_statut;
+    new Chart(document.getElementById('chartTaches'), {
+      type: 'bar',
+      data: {
+        labels: ['À faire', 'En cours', 'Terminé', 'Bloqué'],
+        datasets: [{ data: [ts.a_faire, ts.en_cours, ts.termine, ts.bloque],
+          backgroundColor: ['#9CA3AF', '#3B82F6', '#16A34A', '#DC2626'], borderRadius: 8 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    // Jauge avancement
+    const av = d.avancement;
+    document.getElementById('avancementLabel').textContent = av + '%';
+    new Chart(document.getElementById('chartAvancement'), {
+      type: 'doughnut',
+      data: { datasets: [{ data: [av, 100 - av],
+        backgroundColor: [ORANGE, '#EEE'], borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '78%',
+        circumference: 360, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+    });
+
+    // Courbe activité 30 jours
+    const a = d.activite;
+    new Chart(document.getElementById('chartActivite'), {
+      type: 'line',
+      data: {
+        labels: a.labels,
+        datasets: [
+          { label: 'Rapports', data: a.rapports, borderColor: ORANGE,
+            backgroundColor: 'rgba(255,107,0,.1)', fill: true, tension: .35, pointRadius: 0 },
+          { label: 'Tâches', data: a.taches, borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59,130,246,.08)', fill: true, tension: .35, pointRadius: 0 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' },
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } },
+                  x: { ticks: { maxTicksLimit: 10 } } } }
+    });
+  })
+  .catch(() => {});
+</script>
 {% endblock %}

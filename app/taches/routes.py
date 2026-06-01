@@ -118,3 +118,21 @@ def supprimer(id):
     db.session.commit()
     flash("Tâche supprimée.", 'info')
     return redirect(url_for('taches.liste'))
+
+
+@taches_bp.route('/<int:id>/statut', methods=['POST'])
+@login_required
+@role_required('admin', 'conducteur')
+def changer_statut(id):
+    """Change le statut d'une tâche (utilisé par le Kanban drag & drop).
+    Réponse JSON. Vérifie l'appartenance à l'entreprise via _get_tache_or_404."""
+    from flask import jsonify
+    t = _get_tache_or_404(id)
+    data = request.get_json(silent=True) or {}
+    nouveau = data.get('statut', '')
+    try:
+        t.statut = StatutTache(nouveau)
+    except ValueError:
+        return jsonify(ok=False, error='statut invalide'), 400
+    db.session.commit()
+    return jsonify(ok=True, id=t.id, statut=t.statut.value)
