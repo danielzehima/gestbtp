@@ -92,9 +92,15 @@ def nouveau():
                 description=form.description.data,
             )
             db.session.add(ch)
-            db.session.commit()
-            flash("Chantier créé.", 'success')
-            return redirect(url_for('chantiers.detail', id=ch.id))
+            try:
+                db.session.commit()
+                flash("Chantier créé.", 'success')
+                return redirect(url_for('chantiers.detail', id=ch.id))
+            except Exception:
+                # Filet de sécurité (ex: collision d'unicité concurrente)
+                db.session.rollback()
+                flash("Impossible de créer le chantier : cette référence existe déjà "
+                      "dans votre entreprise.", 'danger')
     return render_template('chantiers/form.html', form=form, mode='Créer')
 
 

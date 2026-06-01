@@ -17,7 +17,12 @@ class Chantier(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     compte_id = db.Column(db.Integer, db.ForeignKey('comptes.id'))  # entreprise propriétaire
     nom = db.Column(db.String(200), nullable=False)
-    reference = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    # Référence unique PAR ENTREPRISE (index uq_chantier_ref_par_compte), pas globalement
+    reference = db.Column(db.String(50), nullable=False, index=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('compte_id', 'reference', name='uq_chantier_ref_par_compte'),
+    )
     adresse = db.Column(db.String(255))
     client_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     responsable_id = db.Column(db.Integer, db.ForeignKey('users.id'))
