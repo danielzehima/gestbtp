@@ -10,7 +10,19 @@
     </div>
     <div class="form-group">{{ form.adresse.label }} {{ form.adresse() }}</div>
     <div class="form-row">
-      <div class="form-group">{{ form.client_id.label }} {{ form.client_id() }}</div>
+      <div class="form-group">
+        {{ form.client_id.label }} {{ form.client_id() }}
+        {% if form.client_id.choices|length <= 1 %}
+        <small style="color:var(--text-muted)">
+          Aucun client enregistré. <a href="{{ url_for('team.index') }}">Ajoutez un client</a>
+          (rôle « Client ») depuis <em>Mon équipe</em> — il pourra se connecter pour suivre son chantier.
+          {% if abo and abo.plan == 'gratuit' %}<br>
+          <span style="color:var(--primary)">Le forfait Gratuit est limité à 1 utilisateur :
+          <a href="{{ url_for('billing.index') }}">passez à un forfait supérieur</a> pour ajouter des clients.</span>
+          {% endif %}
+        </small>
+        {% endif %}
+      </div>
       <div class="form-group">{{ form.responsable_id.label }} {{ form.responsable_id() }}</div>
     </div>
     <div class="form-row">
