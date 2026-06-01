@@ -122,6 +122,66 @@ def detail(id):
     return render_template('journal/detail.html', rapport=rapport)
 
 
+@journal_bp.route('/<int:id>/modifier', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'conducteur')
+def modifier(id):
+    rapport = _get_rapport_or_404(id)
+    form = RapportForm(obj=rapport)
+    form.chantier_id.choices = _chantier_choices()
+    if request.method == 'GET':
+        form.chantier_id.data = rapport.chantier_id
+        form.meteo.data = rapport.meteo
+
+    if form.validate_on_submit():
+        rapport.chantier_id = form.chantier_id.data
+        rapport.date = form.date.data
+        rapport.meteo = form.meteo.data
+        rapport.travaux_realises = form.travaux_realises.data
+        rapport.difficultes = form.difficultes.data
+        rapport.main_oeuvre = form.main_oeuvre.data
+        rapport.observations = form.observations.data
+
+        # Photos ajoutées (les anciennes restent attachées)
+        from app.services.storage_service import upload_photo, is_configured
+        photo_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'chantiers')
+        for f in form.photos.data or []:
+            if f and f.filename and allowed_file(f.filename, current_app.config['ALLOWED_PHOTO_EXTENSIONS']):
+                try:
+                    if is_configured():
+                        chemin = upload_photo(f, folder='chantiers')
+                    else:
+                        fname, _ = save_upload(f, photo_folder)
+                        chemin = f"uploads/chantiers/{fname}"
+                    photo = Photo(
+                        chantier_id=rapport.chantier_id,
+                        chemin_fichier=chemin,
+                        nom_fichier=f.filename,
+                        uploader_id=current_user.id,
+                    )
+                    db.session.add(photo)
+                    db.session.flush()
+                    rapport.photos.append(photo)
+                except Exception as exc:
+                    current_app.logger.error(f"Upload photo rapport échoué: {exc}")
+
+        # Documents ajoutés
+        doc_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'documents')
+        for f in form.documents.data or []:
+            if f and f.filename:
+                fname, _ = save_upload(f, doc_folder)
+                doc = RapportDocument(
+                    rapport_id=rapport.id, nom_fichier=f.filename,
+                    chemin=f"uploads/documents/{fname}",
+                )
+                db.session.add(doc)
+
+        db.session.commit()
+        flash("Rapport mis à jour.", 'success')
+        return redirect(url_for('journal.detail', id=rapport.id))
+    return render_template('journal/form.html', form=form, mode='Modifier', rapport=rapport)
+
+
 @journal_bp.route('/<int:id>/supprimer', methods=['POST'])
 @login_required
 @role_required('admin', 'conducteur')

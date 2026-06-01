@@ -1,7 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1 class="page-title">Nouveau rapport journalier</h1>
+<h1 class="page-title">{{ 'Modifier le rapport' if mode == 'Modifier' else 'Nouveau rapport journalier' }}</h1>
 <div class="card">
+  {% if mode == 'Modifier' and rapport.photos %}
+  <p style="color:var(--text-muted);font-size:13px">
+    <i class="fas fa-info-circle"></i> Ce rapport a déjà {{ rapport.photos|length }} photo(s).
+    Les nouveaux fichiers s'ajouteront aux existants.
+  </p>
+  {% endif %}
   <form method="post" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     <div class="form-row">
