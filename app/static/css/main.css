@@ -330,12 +330,52 @@ table.data tbody tr { transition: background .15s; }
 
 /* ============ Mobile ============ */
 .menu-toggle { display: none; background: none; border: none; font-size: 22px; cursor: pointer; }
+
+/* Overlay sombre derrière la sidebar mobile (cliquable pour fermer) */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0; z-index: 999;
+  background: rgba(0,0,0,.5); opacity: 0; transition: opacity .3s;
+}
+.sidebar-overlay.show { display: block; opacity: 1; }
+
 @media (max-width: 900px) {
-  .sidebar { transform: translateX(-100%); }
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: 4px 0 30px rgba(0,0,0,.3);
+  }
   .sidebar.open { transform: translateX(0); }
   .main { margin-left: 0; }
   .menu-toggle { display: block; }
   .form-row { grid-template-columns: 1fr; }
   .kanban { grid-template-columns: 1fr; }
-  .navbar-top .search input { min-width: 0; width: 140px; }
+
+  /* Navbar top : compacte */
+  .navbar-top { padding: 10px 14px; }
+  .navbar-top .search { display: none; }       /* la recherche prend trop de place sur mobile */
+  .navbar-top .user span { display: none; }     /* on garde juste l'avatar */
+  .content { padding: 16px; }
+  .page-title { font-size: 20px; }
+
+  /* Cartes stats : 2 par ligne */
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-card { padding: 14px; }
+  .stat-card .value { font-size: 24px; }
+
+  /* Tables scrollables horizontalement (évite le débordement) */
+  table.data { display: block; overflow-x: auto; white-space: nowrap; }
+
+  /* Boutons plus accessibles au doigt */
+  .btn { padding: 11px 16px; }
+  .btn-sm { padding: 8px 12px; }
+
+  /* Pricing / cartes : pleine largeur */
+  .pricing-grid, .features-grid, .problems-grid, .why-grid, .testi-grid { grid-template-columns: 1fr; }
+
+  /* Toasts : pleine largeur en bas */
+  .toast-stack { top: auto; bottom: 16px; left: 12px; right: 12px; max-width: none; }
+}
+
+@media (max-width: 560px) {
+  .stats-grid { grid-template-columns: 1fr; }   /* 1 carte par ligne sur très petit écran */
+  .row.g-3 > [class*="col-"] { margin-bottom: 12px; }
 }

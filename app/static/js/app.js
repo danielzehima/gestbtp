@@ -31,11 +31,49 @@ function bindToast(el, delay = 4500) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Menu mobile
+  // ===== Menu mobile : ouverture + fermeture (overlay, lien, Échap) =====
   const toggle = document.querySelector('.menu-toggle');
   const sidebar = document.querySelector('.sidebar');
   if (toggle && sidebar) {
-    toggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+    // Overlay cliquable créé dynamiquement
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'sidebar-overlay';
+      document.body.appendChild(overlay);
+    }
+
+    const openSidebar = () => {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    };
+    const closeSidebar = () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    };
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+
+    // Clic sur l'overlay (zone vide) -> ferme
+    overlay.addEventListener('click', closeSidebar);
+
+    // Clic sur un lien du menu -> ferme (navigation mobile)
+    sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', closeSidebar));
+
+    // Touche Échap -> ferme
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar();
+    });
+
+    // Si on repasse en grand écran, on réinitialise
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 900) closeSidebar();
+    });
   }
 
   // Toasts issus des flash messages serveur (auto-dismiss + fermeture)
