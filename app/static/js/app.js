@@ -62,8 +62,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clic sur l'overlay (zone vide) -> ferme
     overlay.addEventListener('click', closeSidebar);
 
-    // Clic sur un lien du menu -> ferme (navigation mobile)
-    sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', closeSidebar));
+    // Clic sur un lien du menu -> ferme AVANT la navigation.
+    // Délégation : capture aussi le clic sur l'icône <i> à l'intérieur du lien.
+    sidebar.addEventListener('click', (e) => {
+      const link = e.target.closest('a');
+      if (!link) return;
+      // On ferme immédiatement (visuellement) puis on laisse la navigation se faire
+      closeSidebar();
+    });
 
     // Touche Échap -> ferme
     document.addEventListener('keydown', (e) => {
@@ -74,6 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', () => {
       if (window.innerWidth > 900) closeSidebar();
     });
+
+    // Sécurité : à l'arrivée sur une page (y compris retour navigateur via
+    // bfcache), la sidebar doit être fermée.
+    closeSidebar();
+    window.addEventListener('pageshow', closeSidebar);
   }
 
   // Toasts issus des flash messages serveur (auto-dismiss + fermeture)
