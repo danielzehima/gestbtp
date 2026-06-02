@@ -11,13 +11,25 @@ if ('serviceWorker' in navigator) {
 let deferredPrompt = null;
 
 async function doInstall(bar) {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  bar.remove();
-  if (outcome === 'accepted' && window.toast) {
-    window.toast('Application installée ! Retrouvez GESTBTP sur votre écran d\'accueil.', 'success');
+  if (!deferredPrompt) {
+    // Prompt déjà consommé ou navigateur ne le déclenche pas (ex: iOS)
+    if (window.toast) {
+      window.toast("Pour installer : menu du navigateur → « Ajouter à l'écran d'accueil ».", 'info', 6000);
+    } else {
+      alert("Pour installer l'application : ouvrez le menu de votre navigateur puis « Ajouter à l'écran d'accueil ».");
+    }
+    return;
+  }
+  try {
+    await deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (choice && choice.outcome === 'accepted') {
+      bar.remove();
+      if (window.toast) window.toast("Application en cours d'installation…", 'success');
+    }
+  } catch (err) {
+    if (window.toast) window.toast("L'installation n'a pas pu démarrer. Réessayez.", 'danger');
   }
 }
 
@@ -93,12 +105,17 @@ function showInstallButton() {
     bar.style.left = nx + 'px';
     bar.style.top = ny + 'px';
   }
-  function onUp() { dragging = false; grip.style.cursor = 'grab'; }
+  function onUp() {
+    dragging = false;
+    grip.style.cursor = 'grab';
+    // on réinitialise dragged un peu après pour ne pas bloquer un futur clic
+    setTimeout(() => { dragged = false; }, 50);
+  }
 
-  // On démarre le drag depuis la poignée (et tout le bandeau au tactile)
+  // Le drag se déclenche UNIQUEMENT depuis la poignée (jamais depuis le bouton
+  // Installer, sinon le clic d'installation serait avalé).
   grip.addEventListener('mousedown', onDown);
   grip.addEventListener('touchstart', onDown, { passive: false });
-  bar.addEventListener('touchstart', onDown, { passive: false });
   document.addEventListener('mousemove', onMove);
   document.addEventListener('touchmove', onMove, { passive: false });
   document.addEventListener('mouseup', onUp);

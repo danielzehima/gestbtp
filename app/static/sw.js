@@ -2,7 +2,7 @@
 // Stratégie : network-first pour les pages (toujours à jour), cache-first
 // pour les assets statiques (rapide), page hors-ligne en secours.
 
-const CACHE = 'gestbtp-v3';
+const CACHE = 'gestbtp-v4';
 const OFFLINE_URL = '/offline';
 
 // Assets pré-mis en cache à l'installation
