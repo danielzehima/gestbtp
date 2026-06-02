@@ -41,6 +41,11 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@gestbtp.com')
 
+    # ===== Resend (envoi d'emails via API HTTP, fiable sur Vercel) =====
+    RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+    # Expéditeur : utilise onboarding@resend.dev tant que ton domaine n'est pas vérifié
+    RESEND_FROM = os.environ.get('RESEND_FROM', 'GESTBTP <onboarding@resend.dev>')
+
     WTF_CSRF_ENABLED = True
 
     # Supabase Storage (photos)

@@ -78,6 +78,7 @@ def logout():
 
 @auth_bp.route('/forgot', methods=['GET', 'POST'])
 def forgot():
+    from flask import current_app
     form = ForgotForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data.lower()).first()
@@ -86,9 +87,38 @@ def forgot():
             user.reset_expires = datetime.utcnow() + timedelta(hours=2)
             db.session.commit()
             link = url_for('auth.reset', token=user.reset_token, _external=True)
-            send_email(user.email, "GESTBTP - Réinitialisation",
-                       f"Cliquez pour réinitialiser : {link}\n(Valide 2 heures)")
-        flash("Si l'email existe, un lien a été envoyé.", 'info')
+
+            texte = (f"Bonjour {user.nom},\n\n"
+                     f"Vous avez demandé à réinitialiser votre mot de passe GESTBTP.\n"
+                     f"Cliquez sur ce lien (valide 2 heures) :\n{link}\n\n"
+                     f"Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.")
+            html = f"""
+            <div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:auto">
+              <div style="background:#FF6B00;padding:18px;border-radius:12px 12px 0 0;text-align:center">
+                <h1 style="color:#fff;margin:0;font-size:22px">GESTBTP</h1>
+              </div>
+              <div style="border:1px solid #eee;border-top:none;padding:24px;border-radius:0 0 12px 12px">
+                <p>Bonjour <strong>{user.nom}</strong>,</p>
+                <p>Vous avez demandé à réinitialiser votre mot de passe.</p>
+                <p style="text-align:center;margin:24px 0">
+                  <a href="{link}" style="background:#FF6B00;color:#fff;text-decoration:none;
+                     padding:12px 28px;border-radius:10px;font-weight:600;display:inline-block">
+                     Réinitialiser mon mot de passe</a>
+                </p>
+                <p style="color:#888;font-size:13px">Ce lien est valable 2 heures. Si vous n'êtes pas
+                à l'origine de cette demande, ignorez simplement cet email.</p>
+                <p style="color:#aaa;font-size:12px;word-break:break-all">{link}</p>
+              </div>
+            </div>"""
+
+            ok = send_email(user.email, "GESTBTP — Réinitialisation de mot de passe", texte, html)
+
+            # En développement (sans Resend configuré), on affiche le lien à l'écran
+            if not ok and current_app.debug:
+                flash(f"[DEV] Email non envoyé. Lien de réinitialisation : {link}", 'warning')
+                return render_template('auth/forgot.html', form=form)
+
+        flash("Si cette adresse existe, un email de réinitialisation vient d'être envoyé.", 'info')
         return redirect(url_for('auth.login'))
     return render_template('auth/forgot.html', form=form)
 
